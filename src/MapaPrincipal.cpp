@@ -1,15 +1,16 @@
 #include <SFML/Graphics.hpp>
+#include <SFML/Graphics/Rect.hpp>
 #include <vector>
 #include "Personaje.h"
-#include "Casa.h"
+#include "Biblioteca.h"
 #include "MapaPrincipal.h"
 #include "TileMap.h"
 #include <iostream>
 #include <optional>
 
 MapaPrincipal::MapaPrincipal(sf::RenderWindow& window, Personaje& personaje)
-    : m_window(&window),
-      m_personaje(personaje), // Inicializar referencia al personaje
+    : m_window(window),
+      m_personaje(personaje),
       m_ancho(120),
       m_alto(67),
       m_tilemapBase(),
@@ -17,6 +18,11 @@ MapaPrincipal::MapaPrincipal(sf::RenderWindow& window, Personaje& personaje)
 
     std::cout << "🔹 DEBUG: Constructor MapaPrincipal iniciado" << std::endl;
     std::cout << "🔹 DEBUG: m_ancho = " << m_ancho << ", m_alto = " << m_alto << std::endl;
+
+    // Configurar el cuadrado de activación (posición y tamaño)
+    m_cuadradoBiblioteca.setSize(sf::Vector2f(32, 32)); // Tamaño 2x2 tiles (16x16 cada uno)
+    m_cuadradoBiblioteca.setPosition({500, 300}); // Posición en el mapa donde quieras el trigger
+    m_cuadradoBiblioteca.setFillColor(sf::Color(255, 0, 0, 128)); // Rojo semitransparente para debug
 
     inicializarDatosMapa();
     std::cout << "🔹 DEBUG: inicializarDatosMapa() completado" << std::endl;
@@ -220,15 +226,34 @@ void MapaPrincipal::ejecutarMapa() {
 }
 
 void MapaPrincipal::actualizar() {
-    // Actualizar el personaje con los datos de colisión del mapa
     m_personaje.actualizar(m_tilesBase, m_tilesObjetos, m_ancho, m_alto);
     m_personaje.setTilesValidos(m_tilesValidos);
+
+    sf::FloatRect personajeBounds = m_personaje.obtenerHitbox();
+    // 2. Obtener la caja de colisión (AABB) del área de activación.
+    sf::FloatRect triggerArea = m_cuadradoBiblioteca.getGlobalBounds();
+
+    // 3. 🎯 SOLUCIÓN FINAL VERIFICANDO ACCESO A PROPIEDADES (SFML 3.0+):
+    // Usamos .position.x, .size.x, etc.
+    bool colision = (personajeBounds.position.x < triggerArea.position.x + triggerArea.size.x) &&
+                    (personajeBounds.position.x + personajeBounds.size.x > triggerArea.position.x) &&
+                    (personajeBounds.position.y < triggerArea.position.y + triggerArea.size.y) &&
+                    (personajeBounds.position.y + personajeBounds.size.y > triggerArea.position.y);
+
+    if (colision) {
+        std::cout << "🎯 COLISIÓN DETECTADA AABB - Abriendo biblioteca..." << std::endl;
+
+        Biblioteca biblioteca(m_window, m_personaje);
+        biblioteca.ejecutarBiblioteca();
+    }
 }
 
 void MapaPrincipal::dibujar() {
-    m_window->draw(m_tilemapBase);
-    m_window->draw(m_tilemapObjetos);
-    m_personaje.dibujar(*m_window); // Dibujar el personaje sobre los tilemaps
+    m_window.draw(m_tilemapBase);
+    m_window.draw(m_tilemapObjetos);
+    m_window.draw(m_cuadradoBiblioteca);
+
+    m_personaje.dibujar(m_window);
 }
 
 MapaPrincipal::~MapaPrincipal() {

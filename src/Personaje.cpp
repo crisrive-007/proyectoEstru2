@@ -383,6 +383,46 @@ sf::FloatRect Personaje::obtenerHitbox() const
     return sf::FloatRect(sf::Vector2f(hitboxX, hitboxY), sf::Vector2f(hitboxWidth, hitboxHeight));
 }
 
+sf::Vector2f Personaje::getPosition() const {
+    return sprite.getPosition();
+}
+
+void Personaje::setPosition(int x, int y) {
+    sprite.setPosition(sf::Vector2f(x, y));
+}
+
+void Personaje::actualizarEnInterior() {
+        // Versión simplificada de actualizar sin colisiones con tiles
+        // Solo maneja el movimiento básico
+        float deltaTime = 1.0f / 60.0f; // O obtener el deltaTime real
+
+        sf::Vector2f movimiento(0.f, 0.f);
+        float velocidad = 100.f;
+
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up)) {
+        movimiento.y = -velocidad;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down)) {
+        movimiento.y = velocidad;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left)) {
+        movimiento.x = -velocidad;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right)) {
+        movimiento.x = velocidad;
+    }
+
+        movimiento *= deltaTime;
+        sprite.move(movimiento);
+
+        // Aquí podrías añadir límites para que no se salga de la biblioteca
+        sf::Vector2f pos = sprite.getPosition();
+        if (pos.x < 0) sprite.setPosition({0, pos.y});
+        if (pos.y < 0) sprite.setPosition({pos.x, 0});
+        if (pos.x > 800) sprite.setPosition({800, pos.y}); // Ajustar según el tamaño
+        if (pos.y > 600) sprite.setPosition({pos.x, 600}); // Ajustar según el tamaño
+    }
+
 Personaje::~Personaje()
 {
     //dtor

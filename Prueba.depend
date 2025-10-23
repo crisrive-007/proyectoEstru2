@@ -524,12 +524,12 @@
 	<cstdlib>
 	<ctime>
 
-1761248831 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\personaje.h
+1761252800 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\personaje.h
 	<SFML/Graphics.hpp>
 	<vector>
 	<unordered_set>
 
-1761248389 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\personaje.cpp
+1761254224 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\personaje.cpp
 	"Personaje.h"
 	<iostream>
 	<string>
@@ -551,22 +551,23 @@
 
 1760623034 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\categorias.h
 
-1761248568 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\mapaprincipal.cpp
+1761254090 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\mapaprincipal.cpp
 	<SFML/Graphics.hpp>
 	<vector>
 	"Personaje.h"
-	"Casa.h"
+	"Biblioteca.h"
 	"MapaPrincipal.h"
 	"TileMap.h"
 	<iostream>
 	<optional>
 
-1761245350 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\mapaprincipal.h
+1761254010 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\mapaprincipal.h
 	<SFML/Graphics.hpp>
 	<vector>
 	<unordered_set>
 	"TileMap.h"
 	"Personaje.h"
+	"Biblioteca.h"
 
 1760655968 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\ruleta.h
 	<SFML/Graphics.hpp>
@@ -600,11 +601,11 @@
 	<iostream>
 	<SFML/Graphics.hpp>
 
-1761245702 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\biblioteca.cpp
+1761254388 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\biblioteca.cpp
 	"Biblioteca.h"
 	<iostream>
 
-1761201956 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\biblioteca.h
+1761254326 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\biblioteca.h
 	<SFML/Graphics.hpp>
 	"Personaje.h"
 

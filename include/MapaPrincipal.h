@@ -6,6 +6,7 @@
 #include <unordered_set>
 #include "TileMap.h"
 #include "Personaje.h"
+#include "Biblioteca.h"
 
 class MapaPrincipal {
 public:
@@ -24,7 +25,7 @@ public:
     unsigned int getAlto() const { return m_alto; }
 
 private:
-    sf::RenderWindow* m_window;
+    sf::RenderWindow& m_window;
     Personaje& m_personaje; // Referencia al personaje del main
     std::vector<int> m_tilesBase;
     std::vector<int> m_tilesObjetos;
@@ -33,6 +34,7 @@ private:
     TileMap m_tilemapObjetos;
     unsigned int m_ancho;
     unsigned int m_alto;
+    sf::RectangleShape m_cuadradoBiblioteca;
 };
 
 #endif // MAPAPRINCIPAL_H

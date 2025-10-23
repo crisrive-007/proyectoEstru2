@@ -35,6 +35,10 @@ public:
     sf::FloatRect obtenerLimites() const;
     sf::FloatRect obtenerHitbox() const;
     void setTilesValidos(const std::unordered_set<int>& nuevosTilesValidos);
+    void actualizarEnInterior();
+
+    void setPosition(int x, int y);
+    sf::Vector2f getPosition() const;
 
     /*static const std::string QUIETO_PATH;
     static const std::string CAMINAR_PATH;
