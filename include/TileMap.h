@@ -1,7 +1,6 @@
 #ifndef TILEMAP_H
 #define TILEMAP_H
 
-
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <vector>
@@ -27,26 +26,42 @@ public:
     m_width = width;
     m_height = height;
 
-    int tilesPerRow = m_tileset.getSize().x / static_cast<int>(tileSize.x);
-    int tilesPerColumn = m_tileset.getSize().y / static_cast<int>(tileSize.y);
+    // Usar unsigned int consistentemente
+    unsigned int tilesPerRow = m_tileset.getSize().x / tileSize.x;
+    unsigned int tilesPerColumn = m_tileset.getSize().y / tileSize.y;
 
     // 🔹 DEBUG: Información de tiles
     std::cout << "Tiles por fila: " << tilesPerRow << std::endl;
     std::cout << "Tiles por columna: " << tilesPerColumn << std::endl;
     std::cout << "Total de tiles en el mapa: " << width * height << std::endl;
 
+    m_sprites.clear();
     m_sprites.reserve(width * height);
+
     for (unsigned int y = 0; y < height; ++y) {
         for (unsigned int x = 0; x < width; ++x) {
             int tileNumber = tiles[x + y * width];
+
+            // 🔹 Validar tileNumber
+            if (tileNumber < 0) {
+                // Tile vacío, saltar
+                continue;
+            }
 
             // 🔹 DEBUG: Primeros tiles
             if (x < 3 && y < 3) {
                 std::cout << "Tile en (" << x << "," << y << "): numero=" << tileNumber;
             }
 
-            int tu = tileNumber % tilesPerRow;
-            int tv = tileNumber / tilesPerRow;
+            // Conversión segura
+            unsigned int tu = static_cast<unsigned int>(tileNumber) % tilesPerRow;
+            unsigned int tv = static_cast<unsigned int>(tileNumber) / tilesPerRow;
+
+            // 🔹 Validar coordenadas de textura
+            if (tu >= tilesPerRow || tv >= tilesPerColumn) {
+                std::cerr << "Error: TileNumber " << tileNumber << " fuera de rango" << std::endl;
+                continue;
+            }
 
             // 🔹 DEBUG: Coordenadas de textura
             if (x < 3 && y < 3) {
@@ -54,15 +69,24 @@ public:
             }
 
             sf::Sprite sprite(m_tileset);
+
+            // 🔹 CORRECCIÓN PARA SFML 3.0: Usar sf::Vector2i para el rectángulo
             sprite.setTextureRect(sf::IntRect(
-                {tu * static_cast<int>(tileSize.x), tv * static_cast<int>(tileSize.y)},
-                {static_cast<int>(tileSize.x), static_cast<int>(tileSize.y)}
+                sf::Vector2i(static_cast<int>(tu * tileSize.x), static_cast<int>(tv * tileSize.y)),
+                sf::Vector2i(static_cast<int>(tileSize.x), static_cast<int>(tileSize.y))
             ));
 
-            sprite.setPosition({static_cast<float>(x * tileSize.x), static_cast<float>(y * tileSize.y)});
+            // 🔹 CORRECCIÓN PARA SFML 3.0: Usar sf::Vector2f para la posición
+            sprite.setPosition(sf::Vector2f(
+                static_cast<float>(x * tileSize.x),
+                static_cast<float>(y * tileSize.y)
+            ));
+
             m_sprites.push_back(sprite);
         }
     }
+
+    std::cout << "Sprites creados: " << m_sprites.size() << std::endl;
     return true;
 }
 

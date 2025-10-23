@@ -2,14 +2,15 @@
 #include <iostream>
 #include <string>
 
-const std::string QUIETO_PATH = "assets/Player/idle.png";
-const std::string CAMINAR_PATH = "assets/Player/run.png";
-const std::string ATACAR_PATH = "assets/Player/combat_idle.png";
-const std::string HERIDO_PATH = "assets/Player/hurt.png";
-const std::string CELEBRAR_PATH = "assets/Player/emote.png";
+const std::string Personaje::QUIETO_PATH = "assets/Player/idle.png";
+const std::string Personaje::CAMINAR_PATH = "assets/Player/run.png";
+const std::string Personaje::ATACAR_PATH = "assets/Player/combat_idle.png";
+const std::string Personaje::HERIDO_PATH = "assets/Player/hurt.png";
+const std::string Personaje::CELEBRAR_PATH = "assets/Player/emote.png";
+const float Personaje::animSpeed = 0.1f;
 
-Personaje::Personaje(float vel)
-    : sprite(quieto), velocidad(vel), ultima(Abajo) {
+Personaje::Personaje(float vel, const std::unordered_set<int>& tilesValidosParam)
+    : sprite(quieto), velocidad(vel), ultima(Abajo), tilesValidos(tilesValidosParam) {
 
     cargarTodasLasTexturas();
 
@@ -21,6 +22,9 @@ Personaje::Personaje(float vel)
     setEstado(Quieto);
 
     sprite.setPosition({400.f, 300.f});
+
+    // Ya no se inicializa tilesValidos por defecto, se usa el parámetro
+    std::cout << "✅ Personaje creado con " << tilesValidos.size() << " tiles válidos" << std::endl;
 }
 
 void Personaje::cargarTodasLasTexturas() {
@@ -69,6 +73,36 @@ void Personaje::setEstado(Estado nuevoEstado) {
 
 int Personaje::getFilaIndex() const {
     return ultima;
+}
+
+void Personaje::setTilesValidos(const std::unordered_set<int>& nuevosTilesValidos) {
+    tilesValidos = nuevosTilesValidos;
+    std::cout << "✅ Tiles válidos actualizados: " << tilesValidos.size() << " tiles" << std::endl;
+}
+
+bool Personaje::esPosicionValida(const sf::Vector2f& posicion, const std::vector<int>& tiles,
+                               const std::vector<int>& objetos, unsigned int width, unsigned int height) const {
+    // Convertir posición mundial a coordenadas de tile (considerando el tamaño de tile 16x16)
+    unsigned int tileX = static_cast<unsigned int>(posicion.x / 16);
+    unsigned int tileY = static_cast<unsigned int>(posicion.y / 16);
+
+    // Verificar límites del mapa
+    if (tileX >= width || tileY >= height) {
+        return false;
+    }
+
+    // Calcular índice en el arreglo
+    unsigned int index = tileY * width + tileX;
+
+    // Verificar condiciones
+    int tileValue = tiles[index];
+    int objetoValue = objetos[index];
+
+    // El personaje puede caminar si el tile está en tilesValidos Y el objeto es 0
+    bool tileValido = (tilesValidos.find(tileValue) != tilesValidos.end());
+    bool objetoValido = (objetoValue == 2678 || objetoValue == 0);
+
+    return tileValido && objetoValido;
 }
 
 void Personaje::mover() {
@@ -130,11 +164,178 @@ void Personaje::actualizarAnimacion() {
     sprite.setTextureRect(currentFrame);
 }
 
-void Personaje::actualizar()
- {
-     mover();
+void Personaje::mover(const std::vector<int>& tiles, const std::vector<int>& objetos, unsigned int mapWidth, unsigned int mapHeight) {
+    bool seMueve = false;
+    sf::Vector2f movimiento(0.f, 0.f);
+
+    // Calcular movimiento deseado
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up)) {
+        movimiento.y = -velocidad;
+        ultima = Arriba;
+        seMueve = true;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down)) {
+        movimiento.y = velocidad;
+        ultima = Abajo;
+        seMueve = true;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left)) {
+        movimiento.x = -velocidad;
+        ultima = Izquierda;
+        seMueve = true;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right)) {
+        movimiento.x = velocidad;
+        ultima = Derecha;
+        seMueve = true;
+    }
+
+    // Normalizar movimiento diagonal
+    if (movimiento.x != 0.f && movimiento.y != 0.f) {
+        movimiento *= 0.7071f; // 1/sqrt(2)
+    }
+
+    // Aplicar movimiento con verificación de colisiones
+    if (movimiento.x != 0.f) {
+        sf::Vector2f nuevaPosX = sprite.getPosition();
+        nuevaPosX.x += movimiento.x;
+
+        // Verificar hitbox futura en X
+        sf::FloatRect hitboxFuturaX = obtenerHitbox();
+        hitboxFuturaX.position.x += movimiento.x;
+
+        // Verificar las cuatro esquinas de la hitbox
+        bool esquinaSuperiorIzquierda = esPosicionValida(
+            {hitboxFuturaX.position.x, hitboxFuturaX.position.y},
+            tiles, objetos, mapWidth, mapHeight
+        );
+        bool esquinaSuperiorDerecha = esPosicionValida(
+            {hitboxFuturaX.position.x + hitboxFuturaX.size.x, hitboxFuturaX.position.y},
+            tiles, objetos, mapWidth, mapHeight
+        );
+        bool esquinaInferiorIzquierda = esPosicionValida(
+            {hitboxFuturaX.position.x, hitboxFuturaX.position.y + hitboxFuturaX.size.y},
+            tiles, objetos, mapWidth, mapHeight
+        );
+        bool esquinaInferiorDerecha = esPosicionValida(
+            {hitboxFuturaX.position.x + hitboxFuturaX.size.x, hitboxFuturaX.position.y + hitboxFuturaX.size.y},
+            tiles, objetos, mapWidth, mapHeight
+        );
+
+        if (esquinaSuperiorIzquierda && esquinaSuperiorDerecha &&
+            esquinaInferiorIzquierda && esquinaInferiorDerecha) {
+            sprite.move({movimiento.x, 0.f});
+        }
+    }
+
+    if (movimiento.y != 0.f) {
+        sf::Vector2f nuevaPosY = sprite.getPosition();
+        nuevaPosY.y += movimiento.y;
+
+        // Verificar hitbox futura en Y
+        sf::FloatRect hitboxFuturaY = obtenerHitbox();
+        hitboxFuturaY.position.y += movimiento.y;
+
+        // Verificar las cuatro esquinas de la hitbox
+        bool esquinaSuperiorIzquierda = esPosicionValida(
+            {hitboxFuturaY.position.x, hitboxFuturaY.position.y},
+            tiles, objetos, mapWidth, mapHeight
+        );
+        bool esquinaSuperiorDerecha = esPosicionValida(
+            {hitboxFuturaY.position.x + hitboxFuturaY.size.x, hitboxFuturaY.position.y},
+            tiles, objetos, mapWidth, mapHeight
+        );
+        bool esquinaInferiorIzquierda = esPosicionValida(
+            {hitboxFuturaY.position.x, hitboxFuturaY.position.y + hitboxFuturaY.size.y},
+            tiles, objetos, mapWidth, mapHeight
+        );
+        bool esquinaInferiorDerecha = esPosicionValida(
+            {hitboxFuturaY.position.x + hitboxFuturaY.size.x, hitboxFuturaY.position.y + hitboxFuturaY.size.y},
+            tiles, objetos, mapWidth, mapHeight
+        );
+
+        if (esquinaSuperiorIzquierda && esquinaSuperiorDerecha &&
+            esquinaInferiorIzquierda && esquinaInferiorDerecha) {
+            sprite.move({0.f, movimiento.y});
+        }
+    }
+
+    // Actualizar estado de animación
+    if (seMueve && actual != Caminar) {
+        setEstado(Caminar);
+    } else if (!seMueve && actual == Caminar) {
+        setEstado(Quieto);
+    }
+
+    sprite.setScale({1.f, 1.f});
+    sprite.setOrigin({0.f, 0.f});
+}
+
+/*void Personaje::actualizarAnimacion() {
+    currentFrame.position.y = getFilaIndex() * frameHeight;
+
+    if (animClock.getElapsedTime().asSeconds() > animSpeed) {
+
+        int maxFrames = 1;
+
+        switch (actual) {
+            case Caminar:
+                maxFrames = 8;
+                break;
+            case Quieto:
+                maxFrames = 2;
+                break;
+            case Atacar:
+                maxFrames = 2;
+                break;
+            default:
+                maxFrames = 1;
+        }
+
+        currentFrame.position.x += frameWidth;
+        if (currentFrame.position.x >= frameWidth * maxFrames) {
+            currentFrame.position.x = 0;
+        }
+
+        sprite.setTextureRect(currentFrame);
+        animClock.restart();
+    }
+
+    sprite.setTextureRect(currentFrame);
+}*/
+
+void Personaje::actualizarEnBiblioteca() {
+    sf::Vector2f movimiento(0.f, 0.f); // vector temporal de movimiento
+
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up)) {
+        movimiento.y = -velocidad;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down)) {
+        movimiento.y = velocidad;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left)) {
+        movimiento.x = -velocidad;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right)) {
+        movimiento.x = velocidad;
+    }
+
+    // Normalizar movimiento diagonal (para que no se mueva más rápido en diagonal)
+    if (movimiento.x != 0.f && movimiento.y != 0.f)
+        movimiento *= 0.7071f;
+
+    // Aplicar movimiento
+    sprite.move(movimiento);
+}
+
+
+
+void Personaje::actualizar(const std::vector<int>& tiles, const std::vector<int>& objetos, unsigned int mapWidth, unsigned int mapHeight)
+{
+     mover(tiles, objetos, mapWidth, mapHeight);
      actualizarAnimacion();
- }
+}
+
 void Personaje::dibujar(sf::RenderWindow& ventana) {
     ventana.draw(sprite);
 }
@@ -172,9 +373,9 @@ sf::FloatRect Personaje::obtenerHitbox() const
 {
     sf::FloatRect bounds = sprite.getGlobalBounds();
 
-    // Ajustar la hitbox para que sea m�s precisa (solo los pies/parte inferior del personaje)
-    float hitboxWidth = bounds.size.x * 1.f;   // 50% del ancho
-    float hitboxHeight = bounds.size.y * 1.f;  // 30% de la altura (parte inferior)
+    // Ajustar la hitbox para que sea más precisa (solo los pies/parte inferior del personaje)
+    float hitboxWidth = bounds.size.x * 0.5f;   // 50% del ancho
+    float hitboxHeight = bounds.size.y * 0.3f;  // 30% de la altura (parte inferior)
 
     float hitboxX = bounds.position.x + (bounds.size.x - hitboxWidth) / 2.0f;  // Centrar horizontalmente
     float hitboxY = bounds.position.y + bounds.size.y - hitboxHeight;  // Posicionar en la parte inferior

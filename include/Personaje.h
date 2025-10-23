@@ -1,52 +1,72 @@
 #ifndef PERSONAJE_H
 #define PERSONAJE_H
-#pragma once
+
 #include <SFML/Graphics.hpp>
-#include <string>
-#include <iostream>
+#include <vector>
+#include <unordered_set>
 
-class Personaje
-{
-    public:
-        // PRIMERO: Declarar los enums
-        enum Direccion {Abajo = 2, Izquierda = 1, Derecha = 3, Arriba = 0};
-        enum Estado {Quieto, Caminar, Atacar, Herido, Celebrar};
+class Personaje {
+public:
+    enum Estado { Quieto, Caminar, Atacar, Herido, Celebrar };
+    enum Direccion {Arriba = 0, Abajo = 2, Izquierda = 1, Derecha = 3};
 
-        // DESPUÉS: Métodos y constructor
-        Personaje(float vel);
-        void mover();
-        void actualizarAnimacion();
-        void dibujar(sf::RenderWindow& ventana);
-        void limitarBordes(float anchoVentana, float altoVentana);
-        sf::FloatRect obtenerLimites() const;
-        sf::FloatRect obtenerHitbox() const;
-        void setEstado(Estado nuevoEstado);  // Ahora Estado ya está declarado
-        sf::Vector2f obtenerPosicion() const;
-        void establecerPosicion(sf::Vector2f posicion);
-        void actualizar();
-        virtual ~Personaje();
+    // Constructor modificado para recibir tiles válidos
+    Personaje(float vel, const std::unordered_set<int>& tilesValidosParam);
 
-        // Variables públicas
-        Direccion ultima = Abajo;
-        Estado actual = Quieto;
+    void cargarTodasLasTexturas();
+    void setEstado(Estado nuevoEstado);
+    int getFilaIndex() const;
 
-    protected:
+    bool esPosicionValida(const sf::Vector2f& posicion, const std::vector<int>& tiles,
+                        const std::vector<int>& objetos, unsigned int width, unsigned int height) const;
 
-    private:
-        sf::Texture quieto;
-        sf::Texture caminar;
-        sf::Texture atacar;
-        sf::Texture herido;
-        sf::Texture celebrar;
-        sf::Sprite sprite;
-        float velocidad;
-        sf::IntRect currentFrame;
-        const int frameWidth = 64;
-        const int frameHeight = 64;
-        sf::Clock animClock;
-        const float animSpeed = 0.15f;
-        void cargarTodasLasTexturas();
-        int getFilaIndex() const;
+    void mover();
+    void actualizarAnimacion();
+    void mover(const std::vector<int>& tiles, const std::vector<int>& objetos,
+              unsigned int mapWidth, unsigned int mapHeight);
+    void actualizarEnBiblioteca();
+    void actualizar(const std::vector<int>& tiles, const std::vector<int>& objetos,
+                   unsigned int mapWidth, unsigned int mapHeight);
+    void dibujar(sf::RenderWindow& ventana);
+
+    sf::Vector2f obtenerPosicion() const;
+    void establecerPosicion(sf::Vector2f posicion);
+    void limitarBordes(float anchoVentana, float altoVentana);
+    sf::FloatRect obtenerLimites() const;
+    sf::FloatRect obtenerHitbox() const;
+    void setTilesValidos(const std::unordered_set<int>& nuevosTilesValidos);
+
+    /*static const std::string QUIETO_PATH;
+    static const std::string CAMINAR_PATH;
+    static const std::string ATACAR_PATH;
+    static const std::string HERIDO_PATH;
+    static const std::string CELEBRAR_PATH;*/
+
+    ~Personaje();
+
+private:
+    sf::Texture quieto, caminar, atacar, herido, celebrar;
+    sf::Sprite sprite;
+    float velocidad;
+    Estado actual;
+    Direccion ultima;
+
+    // Tiles válidos ahora se recibe como parámetro
+    std::unordered_set<int> tilesValidos;
+
+    // Constantes de animación
+    static const int frameWidth = 64;
+    static const int frameHeight = 64;
+    static const float animSpeed;
+    sf::IntRect currentFrame;
+    sf::Clock animClock;
+
+    static const std::string QUIETO_PATH;
+    static const std::string CAMINAR_PATH;
+    static const std::string ATACAR_PATH;
+    static const std::string HERIDO_PATH;
+    static const std::string CELEBRAR_PATH;
+    //static const float animSpeed;
 };
 
 #endif // PERSONAJE_H

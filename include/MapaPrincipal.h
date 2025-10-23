@@ -1,40 +1,38 @@
 #ifndef MAPAPRINCIPAL_H
 #define MAPAPRINCIPAL_H
 
-#include "Personaje.h"
-#include "Casa.h"
-
 #include <SFML/Graphics.hpp>
 #include <vector>
-#include <map>
-#include <cstdlib>
-
-constexpr int TILE_SIZE = 16;
-constexpr int MAP_WIDTH = 30;
-constexpr int MAP_HEIGHT = 20;
-constexpr int SCREEN_WIDTH = MAP_WIDTH * TILE_SIZE * 2;
-constexpr int SCREEN_HEIGHT = MAP_HEIGHT * TILE_SIZE * 2;
-
-struct TileDef {
-    sf::IntRect rect;
-    // Podrías añadir un puntero a la textura para edificios
-    // sf::Texture* texture;
-};
+#include <unordered_set>
+#include "TileMap.h"
+#include "Personaje.h"
 
 class MapaPrincipal {
 public:
-    MapaPrincipal();
-    void dibujar(sf::RenderWindow& window);
-    void ejecutar();
+    MapaPrincipal(sf::RenderWindow& window, Personaje& personaje);
+
+    void inicializarDatosMapa();
+    void ejecutarMapa();
+    void dibujar();
+    void actualizar();
+    void setTilesValidos(const std::unordered_set<int>& nuevosTilesValidos);
     ~MapaPrincipal();
 
-private:
-    sf::Texture exteriorTileset;
-    sf::Texture edificioTileset;
-    std::map<int, TileDef> definicionTile;
-    std::vector<std::vector<int>> mapa;
+    std::vector<int>& getTilesBase() { return m_tilesBase; }
+    std::vector<int>& getTilesObjetos() { return m_tilesObjetos; }
+    unsigned int getAncho() const { return m_ancho; }
+    unsigned int getAlto() const { return m_alto; }
 
-    void inicializarMapa();
+private:
+    sf::RenderWindow* m_window;
+    Personaje& m_personaje; // Referencia al personaje del main
+    std::vector<int> m_tilesBase;
+    std::vector<int> m_tilesObjetos;
+    std::unordered_set<int> m_tilesValidos; // Tiles válidos definidos en el mapa
+    TileMap m_tilemapBase;
+    TileMap m_tilemapObjetos;
+    unsigned int m_ancho;
+    unsigned int m_alto;
 };
 
 #endif // MAPAPRINCIPAL_H

@@ -514,20 +514,22 @@
 1760488719 c:\users\river\downloads\sfml-3.0.2-windows-gcc-14.2.0-mingw-64-bit\sfml-3.0.2\include\sfml\system\sleep.hpp
 	<SFML/System/Export.hpp>
 
-1761190625 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\main.cpp
+1761245748 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\main.cpp
 	<SFML/Graphics.hpp>
 	"MapaPrincipal.h"
 	"TileMap.h"
+	"Personaje.h"
+	"Biblioteca.h"
 	<iostream>
 	<cstdlib>
 	<ctime>
 
-1761190594 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\personaje.h
+1761248831 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\personaje.h
 	<SFML/Graphics.hpp>
-	<string>
-	<iostream>
+	<vector>
+	<unordered_set>
 
-1761190625 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\personaje.cpp
+1761248389 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\personaje.cpp
 	"Personaje.h"
 	<iostream>
 	<string>
@@ -549,22 +551,22 @@
 
 1760623034 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\categorias.h
 
-1761008054 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\mapaprincipal.cpp
+1761248568 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\mapaprincipal.cpp
 	<SFML/Graphics.hpp>
 	<vector>
 	"Personaje.h"
 	"Casa.h"
 	"MapaPrincipal.h"
+	"TileMap.h"
 	<iostream>
 	<optional>
 
-1761007059 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\mapaprincipal.h
-	"Personaje.h"
-	"Casa.h"
+1761245350 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\mapaprincipal.h
 	<SFML/Graphics.hpp>
 	<vector>
-	<map>
-	<cstdlib>
+	<unordered_set>
+	"TileMap.h"
+	"Personaje.h"
 
 1760655968 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\ruleta.h
 	<SFML/Graphics.hpp>
@@ -587,14 +589,22 @@
 	<vector>
 	<string>
 
-1761018282 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\tilemap.h
+1761239490 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\tilemap.h
 	<SFML/Graphics.hpp>
 	<vector>
 	<string>
 	<iostream>
 
-1761013098 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\tilemap.cpp
+1761238968 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\tilemap.cpp
 	"TileMap.h"
 	<iostream>
 	<SFML/Graphics.hpp>
+
+1761245702 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\biblioteca.cpp
+	"Biblioteca.h"
+	<iostream>
+
+1761201956 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\biblioteca.h
+	<SFML/Graphics.hpp>
+	"Personaje.h"
 
