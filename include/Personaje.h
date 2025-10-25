@@ -19,14 +19,18 @@ public:
 
     bool esPosicionValida(const sf::Vector2f& posicion, const std::vector<int>& tiles,
                         const std::vector<int>& objetos, unsigned int width, unsigned int height) const;
+    bool esPosicionValida(const sf::Vector2f& posicion, const std::vector<int>& tiles,
+                         unsigned int width, unsigned int height) const;
 
     void mover();
     void actualizarAnimacion();
     void mover(const std::vector<int>& tiles, const std::vector<int>& objetos,
               unsigned int mapWidth, unsigned int mapHeight);
+    void mover(const std::vector<int>& tiles, unsigned int mapWidth, unsigned int mapHeight);
     void actualizarEnBiblioteca();
     void actualizar(const std::vector<int>& tiles, const std::vector<int>& objetos,
                    unsigned int mapWidth, unsigned int mapHeight);
+    void actualizar(const std::vector<int>& tiles, unsigned int mapWidth, unsigned int mapHeight);
     void dibujar(sf::RenderWindow& ventana);
 
     sf::Vector2f obtenerPosicion() const;

@@ -49,6 +49,8 @@
 		<Unit filename="include/BancoPreguntas.h" />
 		<Unit filename="include/Biblioteca.h" />
 		<Unit filename="include/Casa.h" />
+		<Unit filename="include/Estado.h" />
+		<Unit filename="include/GestorEstados.h" />
 		<Unit filename="include/MapaPrincipal.h" />
 		<Unit filename="include/Personaje.h" />
 		<Unit filename="include/Queue.h" />
@@ -57,6 +59,7 @@
 		<Unit filename="main.cpp" />
 		<Unit filename="src/Biblioteca.cpp" />
 		<Unit filename="src/Casa.cpp" />
+		<Unit filename="src/GestorEstados.cpp" />
 		<Unit filename="src/MapaPrincipal.cpp" />
 		<Unit filename="src/Personaje.cpp" />
 		<Unit filename="src/Queue.cpp" />

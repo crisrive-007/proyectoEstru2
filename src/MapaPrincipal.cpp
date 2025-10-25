@@ -8,28 +8,23 @@
 #include <iostream>
 #include <optional>
 
-MapaPrincipal::MapaPrincipal(sf::RenderWindow& window, Personaje& personaje)
-    : m_window(window),
+MapaPrincipal::MapaPrincipal(GestorEstados* gestor, sf::RenderWindow& window, Personaje& personaje)
+    : Estado(gestor, personaje),
+      m_window(window),
       m_personaje(personaje),
       m_ancho(120),
       m_alto(67),
       m_tilemapBase(),
       m_tilemapObjetos() {
 
-    std::cout << "🔹 DEBUG: Constructor MapaPrincipal iniciado" << std::endl;
-    std::cout << "🔹 DEBUG: m_ancho = " << m_ancho << ", m_alto = " << m_alto << std::endl;
-
-    // Configurar el cuadrado de activación (posición y tamaño)
     m_cuadradoBiblioteca.setSize(sf::Vector2f(32, 32)); // Tamaño 2x2 tiles (16x16 cada uno)
     m_cuadradoBiblioteca.setPosition({500, 300}); // Posición en el mapa donde quieras el trigger
     m_cuadradoBiblioteca.setFillColor(sf::Color(255, 0, 0, 128)); // Rojo semitransparente para debug
 
     inicializarDatosMapa();
-    std::cout << "🔹 DEBUG: inicializarDatosMapa() completado" << std::endl;
 }
 
 void MapaPrincipal::inicializarDatosMapa() {
-    std::cout << "🔹 DEBUG: inicializarDatosMapa() iniciado" << std::endl;
     m_tilesBase = {
         520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,520,521,
         492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,492,493,
@@ -174,10 +169,6 @@ void MapaPrincipal::inicializarDatosMapa() {
         6, 34, 35, 0, 3, 4, 1, 2, 60, 59, 58, 57, 29, 30, 31, 32, 818, 820, 847, 848, 875, 876
     };
 
-    std::cout << "🔹 DEBUG: m_tilesBase size = " << m_tilesBase.size() << std::endl;
-    std::cout << "🔹 DEBUG: m_tilesObjetos size = " << m_tilesObjetos.size() << std::endl;
-    std::cout << "🔹 DEBUG: Tamaño esperado = " << m_ancho * m_alto << " = " << 120 * 67 << std::endl;
-
     if (m_tilesBase.size() != m_ancho * m_alto) {
         std::cerr << "❌ ERROR: m_tilesBase tiene tamaño incorrecto. Esperado: "
                   << m_ancho * m_alto << ", Obtenido: " << m_tilesBase.size() << std::endl;
@@ -190,9 +181,6 @@ void MapaPrincipal::inicializarDatosMapa() {
 }
 
 void MapaPrincipal::ejecutarMapa() {
-    std::cout << "🔹 DEBUG: ejecutarMapa() iniciado" << std::endl;
-
-    // Verificar que los vectores tengan datos
     if (m_tilesBase.empty()) {
         std::cerr << "❌ ERROR: m_tilesBase está vacío" << std::endl;
         return;
@@ -202,27 +190,15 @@ void MapaPrincipal::ejecutarMapa() {
         return;
     }
 
-    std::cout << "🔹 DEBUG: Intentando cargar tilemap base..." << std::endl;
-
-    // Cargar el tilemap base
     if (!m_tilemapBase.load("assets/Tilesets/Tileset 2.png", sf::Vector2u(16, 16),
                           m_tilesBase, m_ancho, m_alto)) {
         std::cerr << "❌ ERROR cargando el tilemap base" << std::endl;
-    } else {
-        std::cout << "✅ DEBUG: Tilemap base cargado correctamente" << std::endl;
     }
 
-    std::cout << "🔹 DEBUG: Intentando cargar tilemap objetos..." << std::endl;
-
-    // Cargar el tilemap de objetos
     if (!m_tilemapObjetos.load("assets/Tilesets/Tileset 1.png", sf::Vector2u(16, 16),
                              m_tilesObjetos, m_ancho, m_alto)) {
         std::cerr << "❌ ERROR cargando el tilemap de objetos" << std::endl;
-    } else {
-        std::cout << "✅ DEBUG: Tilemap objetos cargado correctamente" << std::endl;
     }
-
-    std::cout << "🔹 DEBUG: ejecutarMapa() completado" << std::endl;
 }
 
 void MapaPrincipal::actualizar() {
@@ -241,19 +217,25 @@ void MapaPrincipal::actualizar() {
                     (personajeBounds.position.y + personajeBounds.size.y > triggerArea.position.y);
 
     if (colision) {
-        std::cout << "🎯 COLISIÓN DETECTADA AABB - Abriendo biblioteca..." << std::endl;
-
-        Biblioteca biblioteca(m_window, m_personaje);
-        biblioteca.ejecutarBiblioteca();
+        gestor->empujarEstado(std::make_unique<Biblioteca>(gestor, m_window, m_personaje));
     }
 }
 
-void MapaPrincipal::dibujar() {
-    m_window.draw(m_tilemapBase);
-    m_window.draw(m_tilemapObjetos);
-    m_window.draw(m_cuadradoBiblioteca);
+void MapaPrincipal::manejarEventos(sf::RenderWindow& window) {
+    while (auto event = window.pollEvent()) {
+        if (event->is<sf::Event::Closed>()) {
+            window.close();
+            return;
+        }
+    }
+}
 
-    m_personaje.dibujar(m_window);
+void MapaPrincipal::dibujar(sf::RenderWindow& window) {
+    window.draw(m_tilemapBase);
+    window.draw(m_tilemapObjetos);
+    window.draw(m_cuadradoBiblioteca);
+
+    m_personaje.dibujar(window);
 }
 
 MapaPrincipal::~MapaPrincipal() {

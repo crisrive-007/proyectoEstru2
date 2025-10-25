@@ -3,67 +3,55 @@
 #include "TileMap.h"
 #include "Personaje.h"
 #include "Biblioteca.h"
+#include "GestorEstados.h"
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
+#include <memory> // Necesario para std::unique_ptr
 
 int main() {
-    std::cout << "🎮 Iniciando aplicación..." << std::endl;
-
     sf::RenderWindow window(sf::VideoMode({1920, 1080}), "Mapa con Tilemaps");
+    window.setFramerateLimit(60);
 
     if (!window.isOpen()) {
         std::cerr << "❌ ERROR: No se pudo crear la ventana" << std::endl;
         return -1;
     }
 
-    std::cout << "✅ Ventana creada correctamente" << std::endl;
+    std::unordered_set<int> tilesValidos = {0}; // Asumiendo que 0 es el tile transitable
+    Personaje jugador(3.0f, tilesValidos);
 
-    // CREAR EL PERSONAJE primero
-    std::cout << "🔹 Creando personaje..." << std::endl;
-    std::unordered_set<int> tilesValidos = {0};
-    Personaje jugador(3.0f, tilesValidos); // Velocidad de 200.0f como en tu código
+    // **1. Inicializar el Gestor de Estados (State Manager)**
+    GestorEstados gestor(window, jugador);
 
-    std::cout << "✅ Personaje creado correctamente en posición: "
-              << jugador.obtenerPosicion().x << ", "
-              << jugador.obtenerPosicion().y << std::endl;
+    std::unique_ptr<MapaPrincipal> estadoMapa = std::make_unique<MapaPrincipal>(&gestor, window, jugador);
 
-    // Crear el mapa principal pasando la ventana Y EL PERSONAJE
-    std::cout << "🔹 Creando MapaPrincipal con personaje..." << std::endl;
-    MapaPrincipal mapa(window, jugador); // Ahora pasa el personaje
-    std::cout << "✅ MapaPrincipal creado correctamente" << std::endl;
+    // Ejecutar la función que configura los TileMaps, etc.
+    estadoMapa->ejecutarMapa();
 
-    // Ejecutar la función que configura todo el mapa
-    std::cout << "🔹 Ejecutando mapa..." << std::endl;
-    mapa.ejecutarMapa();
-    std::cout << "✅ Mapa ejecutado correctamente" << std::endl;
+    // Empujar el estado al gestor. El gestor ahora controla este estado.
+    gestor.empujarEstado(std::move(estadoMapa));
 
-    std::cout << "🎮 Entrando al loop principal..." << std::endl;
-
-    // Reloj para el control de FPS
     sf::Clock clock;
 
     // Loop principal
     while (window.isOpen()) {
-        // Calcular delta time
-        float deltaTime = clock.restart().asSeconds();
+        // float deltaTime = clock.restart().asSeconds(); // Opcional si usas setFramerateLimit(60)
 
-        // Procesar eventos
-        while (auto event = window.pollEvent()) {
-            if (event->is<sf::Event::Closed>()) {
-                window.close();
-            }
-        }
+        // **3. DELEGACIÓN COMPLETA AL GESTOR DE ESTADOS**
+        // El Gestor llama a los métodos del estado que esté activo (MapaPrincipal o Biblioteca)
 
-        // ACTUALIZAR: Lógica del juego (incluye movimiento del personaje con colisiones)
-        mapa.actualizar();
+        // Manejar Eventos: El estado activo se encarga de los eventos (incluido el cierre de la ventana y el movimiento del personaje)
+        gestor.manejarEventos();
+
+        // ACTUALIZAR: Lógica del juego y colisiones (incluye la detección de entrada a la biblioteca)
+        gestor.actualizar();
 
         // DIBUJAR
         window.clear();
-        mapa.dibujar(); // Esto dibuja los tilemaps Y el personaje
+        gestor.dibujar(); // Dibuja el estado activo
         window.display();
     }
 
-    std::cout << "🏁 Aplicación terminada correctamente" << std::endl;
     return 0;
 }

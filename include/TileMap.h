@@ -17,11 +17,6 @@ public:
         return false;
     }
 
-    // 🔹 DEBUG: Información del tileset
-    std::cout << "Tileset cargado: " << tilesetPath << std::endl;
-    std::cout << "Tamaño del tileset: " << m_tileset.getSize().x << "x" << m_tileset.getSize().y << std::endl;
-    std::cout << "Tamaño de tile: " << tileSize.x << "x" << tileSize.y << std::endl;
-
     m_tileSize = tileSize;
     m_width = width;
     m_height = height;
@@ -29,11 +24,6 @@ public:
     // Usar unsigned int consistentemente
     unsigned int tilesPerRow = m_tileset.getSize().x / tileSize.x;
     unsigned int tilesPerColumn = m_tileset.getSize().y / tileSize.y;
-
-    // 🔹 DEBUG: Información de tiles
-    std::cout << "Tiles por fila: " << tilesPerRow << std::endl;
-    std::cout << "Tiles por columna: " << tilesPerColumn << std::endl;
-    std::cout << "Total de tiles en el mapa: " << width * height << std::endl;
 
     m_sprites.clear();
     m_sprites.reserve(width * height);
@@ -48,25 +38,8 @@ public:
                 continue;
             }
 
-            // 🔹 DEBUG: Primeros tiles
-            if (x < 3 && y < 3) {
-                std::cout << "Tile en (" << x << "," << y << "): numero=" << tileNumber;
-            }
-
-            // Conversión segura
             unsigned int tu = static_cast<unsigned int>(tileNumber) % tilesPerRow;
             unsigned int tv = static_cast<unsigned int>(tileNumber) / tilesPerRow;
-
-            // 🔹 Validar coordenadas de textura
-            if (tu >= tilesPerRow || tv >= tilesPerColumn) {
-                std::cerr << "Error: TileNumber " << tileNumber << " fuera de rango" << std::endl;
-                continue;
-            }
-
-            // 🔹 DEBUG: Coordenadas de textura
-            if (x < 3 && y < 3) {
-                std::cout << " -> UV=(" << tu << "," << tv << ")" << std::endl;
-            }
 
             sf::Sprite sprite(m_tileset);
 
@@ -86,7 +59,6 @@ public:
         }
     }
 
-    std::cout << "Sprites creados: " << m_sprites.size() << std::endl;
     return true;
 }
 

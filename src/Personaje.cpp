@@ -22,9 +22,6 @@ Personaje::Personaje(float vel, const std::unordered_set<int>& tilesValidosParam
     setEstado(Quieto);
 
     sprite.setPosition({400.f, 300.f});
-
-    // Ya no se inicializa tilesValidos por defecto, se usa el parámetro
-    std::cout << "✅ Personaje creado con " << tilesValidos.size() << " tiles válidos" << std::endl;
 }
 
 void Personaje::cargarTodasLasTexturas() {
@@ -77,7 +74,6 @@ int Personaje::getFilaIndex() const {
 
 void Personaje::setTilesValidos(const std::unordered_set<int>& nuevosTilesValidos) {
     tilesValidos = nuevosTilesValidos;
-    std::cout << "✅ Tiles válidos actualizados: " << tilesValidos.size() << " tiles" << std::endl;
 }
 
 bool Personaje::esPosicionValida(const sf::Vector2f& posicion, const std::vector<int>& tiles,
@@ -103,6 +99,22 @@ bool Personaje::esPosicionValida(const sf::Vector2f& posicion, const std::vector
     bool objetoValido = (objetoValue == 2678 || objetoValue == 0);
 
     return tileValido && objetoValido;
+}
+
+bool Personaje::esPosicionValida(const sf::Vector2f& posicion, const std::vector<int>& tiles,
+                               unsigned int width, unsigned int height) const {
+    unsigned int tileX = static_cast<unsigned int>(posicion.x / 16);
+    unsigned int tileY = static_cast<unsigned int>(posicion.y / 16);
+
+    if (tileX >= width || tileY >= height) {
+        return false;
+    }
+
+    unsigned int index = tileY * width + tileX;
+    int tileValue = tiles[index];
+
+    // Solo verificar si el tile está en tilesValidos
+    return (tilesValidos.find(tileValue) != tilesValidos.end());
 }
 
 void Personaje::mover() {
@@ -271,6 +283,99 @@ void Personaje::mover(const std::vector<int>& tiles, const std::vector<int>& obj
     sprite.setOrigin({0.f, 0.f});
 }
 
+void Personaje::mover(const std::vector<int>& tiles, unsigned int mapWidth, unsigned int mapHeight) {
+    bool seMueve = false;
+    sf::Vector2f movimiento(0.f, 0.f);
+
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up)) {
+        movimiento.y = -velocidad;
+        ultima = Arriba;
+        seMueve = true;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down)) {
+        movimiento.y = velocidad;
+        ultima = Abajo;
+        seMueve = true;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left)) {
+        movimiento.x = -velocidad;
+        ultima = Izquierda;
+        seMueve = true;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right)) {
+        movimiento.x = velocidad;
+        ultima = Derecha;
+        seMueve = true;
+    }
+
+    if (movimiento.x != 0.f && movimiento.y != 0.f) {
+        movimiento *= 0.7071f;
+    }
+
+    if (movimiento.x != 0.f) {
+        sf::FloatRect hitboxFuturaX = obtenerHitbox();
+        hitboxFuturaX.position.x += movimiento.x;
+
+        bool esquinaSuperiorIzquierda = esPosicionValida(
+            {hitboxFuturaX.position.x, hitboxFuturaX.position.y},
+            tiles, mapWidth, mapHeight
+        );
+        bool esquinaSuperiorDerecha = esPosicionValida(
+            {hitboxFuturaX.position.x + hitboxFuturaX.size.x, hitboxFuturaX.position.y},
+            tiles, mapWidth, mapHeight
+        );
+        bool esquinaInferiorIzquierda = esPosicionValida(
+            {hitboxFuturaX.position.x, hitboxFuturaX.position.y + hitboxFuturaX.size.y},
+            tiles, mapWidth, mapHeight
+        );
+        bool esquinaInferiorDerecha = esPosicionValida(
+            {hitboxFuturaX.position.x + hitboxFuturaX.size.x, hitboxFuturaX.position.y + hitboxFuturaX.size.y},
+            tiles, mapWidth, mapHeight
+        );
+
+        if (esquinaSuperiorIzquierda && esquinaSuperiorDerecha &&
+            esquinaInferiorIzquierda && esquinaInferiorDerecha) {
+            sprite.move({movimiento.x, 0.f});
+        }
+    }
+
+    if (movimiento.y != 0.f) {
+        sf::FloatRect hitboxFuturaY = obtenerHitbox();
+        hitboxFuturaY.position.y += movimiento.y;
+
+        bool esquinaSuperiorIzquierda = esPosicionValida(
+            {hitboxFuturaY.position.x, hitboxFuturaY.position.y},
+            tiles, mapWidth, mapHeight
+        );
+        bool esquinaSuperiorDerecha = esPosicionValida(
+            {hitboxFuturaY.position.x + hitboxFuturaY.size.x, hitboxFuturaY.position.y},
+            tiles, mapWidth, mapHeight
+        );
+        bool esquinaInferiorIzquierda = esPosicionValida(
+            {hitboxFuturaY.position.x, hitboxFuturaY.position.y + hitboxFuturaY.size.y},
+            tiles, mapWidth, mapHeight
+        );
+        bool esquinaInferiorDerecha = esPosicionValida(
+            {hitboxFuturaY.position.x + hitboxFuturaY.size.x, hitboxFuturaY.position.y + hitboxFuturaY.size.y},
+            tiles, mapWidth, mapHeight
+        );
+
+        if (esquinaSuperiorIzquierda && esquinaSuperiorDerecha &&
+            esquinaInferiorIzquierda && esquinaInferiorDerecha) {
+            sprite.move({0.f, movimiento.y});
+        }
+    }
+
+    if (seMueve && actual != Caminar) {
+        setEstado(Caminar);
+    } else if (!seMueve && actual == Caminar) {
+        setEstado(Quieto);
+    }
+
+    sprite.setScale({1.f, 1.f});
+    sprite.setOrigin({0.f, 0.f});
+}
+
 /*void Personaje::actualizarAnimacion() {
     currentFrame.position.y = getFilaIndex() * frameHeight;
 
@@ -334,6 +439,11 @@ void Personaje::actualizar(const std::vector<int>& tiles, const std::vector<int>
 {
      mover(tiles, objetos, mapWidth, mapHeight);
      actualizarAnimacion();
+}
+
+void Personaje::actualizar(const std::vector<int>& tiles, unsigned int mapWidth, unsigned int mapHeight) {
+    mover(tiles, mapWidth, mapHeight);
+    actualizarAnimacion();
 }
 
 void Personaje::dibujar(sf::RenderWindow& ventana) {

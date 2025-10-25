@@ -7,17 +7,23 @@
 #include "TileMap.h"
 #include "Personaje.h"
 #include "Biblioteca.h"
+#include "Estado.h"
 
-class MapaPrincipal {
+class MapaPrincipal : public Estado {
 public:
-    MapaPrincipal(sf::RenderWindow& window, Personaje& personaje);
+    MapaPrincipal(GestorEstados* gestor, sf::RenderWindow& window, Personaje& personaje);
 
     void inicializarDatosMapa();
     void ejecutarMapa();
     void dibujar();
-    void actualizar();
     void setTilesValidos(const std::unordered_set<int>& nuevosTilesValidos);
     ~MapaPrincipal();
+
+    void manejarEventos(sf::RenderWindow& window) override;
+    void actualizar() override;
+    void dibujar(sf::RenderWindow& window) override;
+
+    bool verificarTransicion();
 
     std::vector<int>& getTilesBase() { return m_tilesBase; }
     std::vector<int>& getTilesObjetos() { return m_tilesObjetos; }
@@ -29,11 +35,11 @@ private:
     Personaje& m_personaje; // Referencia al personaje del main
     std::vector<int> m_tilesBase;
     std::vector<int> m_tilesObjetos;
-    std::unordered_set<int> m_tilesValidos; // Tiles válidos definidos en el mapa
-    TileMap m_tilemapBase;
-    TileMap m_tilemapObjetos;
+    std::unordered_set<int> m_tilesValidos;
     unsigned int m_ancho;
     unsigned int m_alto;
+    TileMap m_tilemapBase;
+    TileMap m_tilemapObjetos;
     sf::RectangleShape m_cuadradoBiblioteca;
 };
 
