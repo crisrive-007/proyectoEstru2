@@ -2,57 +2,70 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 
-/*TileMap::TileMap() : m_vertices(sf::Quads) {}
+// 馃煝 SOLUCI脫N CLAVE: Implementaci贸n correcta de la funci贸n draw.
+void TileMap::draw(sf::RenderTarget& target, sf::RenderStates states) const {
+    // 1. Aplicar la transformaci贸n (posici贸n, escala, etc.) del objeto TileMap.
+    states.transform *= getTransform();
 
-bool TileMap::cargar(const std::string& texturePath, sf::Vector2u tileSize,
-                const std::vector<int>& tiles, unsigned int ancho, unsigned int alto) {
+    // 2. Aplicar la textura (el tileset) que se carg贸.
+    states.texture = &m_tileset;
 
-        // Cargar la textura del tileset
-        if (!m_tileset.loadFromFile(texturePath)) {
-            return false;
-        }
+    // 3. Dibujar la geometr铆a (los quads) usando la textura.
+    target.draw(m_vertices, states);
+}
 
-        m_tiles = tiles;
-        m_mapSize = sf::Vector2u(ancho, alto);
-        m_tileSize = tileSize;
+bool TileMap::load(const std::string& texturePath, sf::Vector2u tileSize,
+                    const std::vector<int>& tiles, unsigned int width, unsigned int height) {
 
-        // Redimensionar el array de v閞tices
-        m_vertices.resize(ancho * alto * 4);
-
-        // Poblar el array de v閞tices con los quads de cada tile
-        for (unsigned int i = 0; i < ancho; i++) {
-            for (unsigned int j = 0; j < alto; j++) {
-                int tileNumber = tiles[i + j * ancho];
-
-                // Si el tile es -1, es transparente (no se dibuja)
-                if (tileNumber == -1) {
-                    continue;
-                }
-
-                // Calcular la posici髇 en el tileset
-                int tu = tileNumber % (m_tileset.getSize().x / tileSize.x);
-                int tv = tileNumber / (m_tileset.getSize().x / tileSize.x);
-
-                // Obtener un puntero al quad actual
-                sf::Vertex* quad = &m_vertices[(i + j * ancho) * 4];
-
-                // Definir las 4 esquinas del quad
-                quad[0].position = sf::Vector2f(i * tileSize.x, j * tileSize.y);
-                quad[1].position = sf::Vector2f((i + 1) * tileSize.x, j * tileSize.y);
-                quad[2].position = sf::Vector2f((i + 1) * tileSize.x, (j + 1) * tileSize.y);
-                quad[3].position = sf::Vector2f(i * tileSize.x, (j + 1) * tileSize.y);
-
-                // Definir las coordenadas de textura
-                quad[0].texCoords = sf::Vector2f(tu * tileSize.x, tv * tileSize.y);
-                quad[1].texCoords = sf::Vector2f((tu + 1) * tileSize.x, tv * tileSize.y);
-                quad[2].texCoords = sf::Vector2f((tu + 1) * tileSize.x, (tv + 1) * tileSize.y);
-                quad[3].texCoords = sf::Vector2f(tu * tileSize.x, (tv + 1) * tileSize.y);
-            }
-        }
-
-        return true;
+    // 馃洃 VERIFICACI脫N CR脥TICA: Carga del archivo del tileset (Aseg煤rate que la RUTA es correcta)
+    if (!m_tileset.loadFromFile(texturePath)) {
+        std::cerr << "馃洃 ERROR CRITICO: No se pudo cargar el archivo del tileset en: " << texturePath << std::endl;
+        return false;
     }
 
-    void TileMap::dibujar(sf::RenderWindow& window) {
-        window.draw(m_vertices, &m_tileset);
-    }*/
+    m_tileSize = tileSize;
+
+    m_vertices.setPrimitiveType(sf::PrimitiveType::Triangles);
+    m_vertices.resize(width * height * 6);
+
+    int tilesPerRow = m_tileset.getSize().x / tileSize.x;
+
+    for (unsigned int j = 0; j < height; ++j) {
+    for (unsigned int i = 0; i < width; ++i) {
+
+        int tileNumber = tiles[i + j * width];
+        if (tileNumber < 0) continue;
+
+        int tu = tileNumber % tilesPerRow;
+        int tv = tileNumber / tilesPerRow;
+
+        // 铆ndice base del tile actual
+        sf::Vertex* tri = &m_vertices[(i + j * width) * 6];
+
+        float x = static_cast<float>(i * tileSize.x);
+        float y = static_cast<float>(j * tileSize.y);
+        float u = static_cast<float>(tu * tileSize.x);
+        float v = static_cast<float>(tv * tileSize.y);
+
+        // Tri谩ngulo 1
+        tri[0].position = {x, y};
+        tri[1].position = {x + tileSize.x, y};
+        tri[2].position = {x + tileSize.x, y + tileSize.y};
+
+        tri[0].texCoords = {u, v};
+        tri[1].texCoords = {u + tileSize.x, v};
+        tri[2].texCoords = {u + tileSize.x, v + tileSize.y};
+
+        // Tri谩ngulo 2
+        tri[3].position = {x, y};
+        tri[4].position = {x + tileSize.x, y + tileSize.y};
+        tri[5].position = {x, y + tileSize.y};
+
+        tri[3].texCoords = {u, v};
+        tri[4].texCoords = {u + tileSize.x, v + tileSize.y};
+        tri[5].texCoords = {u, v + tileSize.y};
+    }
+}
+
+    return true;
+}

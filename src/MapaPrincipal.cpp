@@ -18,7 +18,7 @@ MapaPrincipal::MapaPrincipal(GestorEstados* gestor, sf::RenderWindow& window, Pe
       m_tilemapObjetos() {
 
     m_cuadradoBiblioteca.setSize(sf::Vector2f(32, 32)); // Tamaño 2x2 tiles (16x16 cada uno)
-    m_cuadradoBiblioteca.setPosition({500, 300}); // Posición en el mapa donde quieras el trigger
+    m_cuadradoBiblioteca.setPosition({930, 290}); // Posición en el mapa donde quieras el trigger
     m_cuadradoBiblioteca.setFillColor(sf::Color(255, 0, 0, 128)); // Rojo semitransparente para debug
 
     inicializarDatosMapa();
@@ -217,7 +217,17 @@ void MapaPrincipal::actualizar() {
                     (personajeBounds.position.y + personajeBounds.size.y > triggerArea.position.y);
 
     if (colision) {
-        gestor->empujarEstado(std::make_unique<Biblioteca>(gestor, m_window, m_personaje));
+        std::cout << "📚 Entrando a la biblioteca..." << std::endl;
+
+        // Crear el nuevo estado Biblioteca
+        std::unique_ptr<Biblioteca> estadoBiblioteca = std::make_unique<Biblioteca>(gestor, m_window, m_personaje);
+
+        estadoBiblioteca->ejecutarMapa();
+
+        // Empujar la biblioteca al gestor de estados
+        gestor->empujarEstado(std::move(estadoBiblioteca));
+
+        return;
     }
 }
 

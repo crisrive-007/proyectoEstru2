@@ -25,6 +25,7 @@ int main() {
     GestorEstados gestor(window, jugador);
 
     std::unique_ptr<MapaPrincipal> estadoMapa = std::make_unique<MapaPrincipal>(&gestor, window, jugador);
+    //std::unique_ptr<Biblioteca> estadoMapa = std::make_unique<Biblioteca>(&gestor, window, jugador);
 
     // Ejecutar la función que configura los TileMaps, etc.
     estadoMapa->ejecutarMapa();

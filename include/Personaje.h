@@ -41,6 +41,8 @@ public:
     void setTilesValidos(const std::unordered_set<int>& nuevosTilesValidos);
     void actualizarEnInterior();
 
+    float getRadioColision();
+
     void setPosition(int x, int y);
     sf::Vector2f getPosition() const;
 
@@ -58,6 +60,7 @@ private:
     float velocidad;
     Estado actual;
     Direccion ultima;
+    float radioColision;
 
     // Tiles válidos ahora se recibe como parámetro
     std::unordered_set<int> tilesValidos;
