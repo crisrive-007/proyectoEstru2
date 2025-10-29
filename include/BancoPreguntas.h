@@ -1,32 +1,38 @@
 #ifndef BANCOPREGUNTAS_H
 #define BANCOPREGUNTAS_H
 
-enum Categorias {
+#include <iostream>
+
+#include "Categorias.h"
+
+/*enum Categorias {
     Arte,
     Politica,
     Historia,
     Ciencia
-};
+};*/
 
-struct Pregunta {
-    string pregunta;
-    string opciones[4];
-    string respuesta;
-    Categorias categoria;
-};
+/*struct Pregunta {
+    std::string pregunta;
+    std::string opcionA;
+    std::string opcionB;
+    std::string opcionC;
+    std::string opcionD;
+    char respuestaCorrecta;
+};*/
 
 class BancoPreguntas
 {
     public:
-        std::vector<Pregunta> arte;
+        /*std::vector<Pregunta> arte;
         std::vector<Pregunta> politica;
         std::vector<Pregunta> ciencia;
         std::vector<Pregunta> historia;
 
         BancoPreguntas() {
-            arte.push_back({"Uno de los siguientes personajes fue el encargado de pintar la capilla Sixtina:", {"Miguel Ángel", "Donatello", "Leonardo Da Vinci", "Francis Bacon"}, "Miguel Ángel", Categoria::Arte});
-            arte.push_back({"Genio del renacimiento que esculpió el Moisés, el David y la Pietá:", {"Miguel Ángel Buonarroti", "Leonardo Da Vinci", "Rafael Sanzio", "Galileo Galilei"}, "Miguel Ángel Buonarroti", Categoria::Arte});
-            arte.push_back({"Durante el renacimiento el estilo artístico que impregnó el arte, la filosofía, la pintura escritura fue el:", {"El Gótico", "El Barroco", "El Clasicismo", "El Romanticismo"}, "El Barroco", Categoria::Arte});
+            arte.push_back({"Uno de los siguientes personajes fue el encargado de pintar la capilla Sixtina:", {"Miguel Ángel", "Donatello", "Leonardo Da Vinci", "Francis Bacon"}, "Miguel Ángel", Categorias::Arte});
+            arte.push_back({"Genio del renacimiento que esculpió el Moisés, el David y la Pietá:", {"Miguel Ángel Buonarroti", "Leonardo Da Vinci", "Rafael Sanzio", "Galileo Galilei"}, "Miguel Ángel Buonarroti", Categorias::Arte});
+            arte.push_back({"Durante el renacimiento el estilo artístico que impregnó el arte, la filosofía, la pintura escritura fue el:", {"El Gótico", "El Barroco", "El Clasicismo", "El Romanticismo"}, "El Barroco", Categorias::Arte});
             arte.push_back({"Durante el renacimiento surge una nueva visión del hombre, que se vio reflejada en el arte, en la política y en las ciencias sociales y humanas, a lo que se denomina:", {"Antropocentrismo", "Humanismo", "Paradigma antropológico", "Teocentrismo"}, "Humanismo", Categorias::Arte});
             arte.push_back({"Cuatro genios del renacimiento (Leonardo, Donatello, Rafael y Michelangelo) han sido llevados a la pantalla en los comics de:", {"Las Tortugas Ninjas", "Los Caballeros del Zodiaco", "Los Cuatro Fantásticos", "Los antagonistas de Attack on Titan"}, "Las Tortugas Ninjas", Categorias::Arte});
 
@@ -47,7 +53,7 @@ class BancoPreguntas
             historia.push_back({"Antes de la consolidación del estado moderno, Italia estuvo divida en pequeñas ciudades-estado normalmente enfrentadas entre si, como es el caso de:", {"Florencia-Napoli", "Ámsterdam-Cracovia", "Reims-Colonia", "Milán-Lourdes"}, "Florencia-Napoli", Categorias::Historia});
             historia.push_back({"La toma de Constantinopla supone un bloqueo comercial entre Europa y Asia (la ruta de la seda) y ocurrió en lo que hoy es actualmente:", {"Eslovaquia", "Estambul en Turquía", "Mesopotamia", "Jerusalén"}, "Estambul en Turquía", Categorias::Historia});
             historia.push_back({"Resurge el interés por Grecia y Roma, junto al declive del sistema feudal, el crecimiento del comercio e innovaciones entre las que mencionamos:", {"La imprenta y la brújula", "La rueda y la escritura", "Las máquinas de vapor y la producción en masa", "La pólvora y la rueda"}, "La imprenta y la brújula", Categorias::Historia});
-        }
+        }*/
         virtual ~BancoPreguntas() {}
 
     protected:

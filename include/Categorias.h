@@ -1,7 +1,6 @@
 #ifndef CATEGORIAS_H
 #define CATEGORIAS_H
 
-
 enum Categorias {
     Arte,
     Politica,

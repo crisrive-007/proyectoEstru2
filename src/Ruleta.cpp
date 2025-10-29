@@ -1,6 +1,6 @@
 #include "Ruleta.h"
 #include <iostream>
-#include <random> // Para generación de números aleatorios
+#include <random>
 
 Ruleta::Ruleta() : m_textura(), m_texturaCentro(), m_sprite(m_textura), m_spriteCentro(m_texturaCentro), m_circuloColision(), m_velocidadRotacion(0.0f) {
 }
