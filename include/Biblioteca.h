@@ -4,6 +4,7 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <unordered_set>
+#include <memory>
 #include "TileMap.h"
 #include "Personaje.h"
 #include "MapaPrincipal.h"
@@ -26,20 +27,24 @@ private:
 
     // Áreas
     sf::RectangleShape            m_areaSalida;
-    std::array<sf::RectangleShape,4> puertas{};
-    std::array<bool,4>            colisionandoAntes{false, false, false, false};
-    std::vector<sf::RectangleShape> m_areasExtra; // opcional, para debug
-
+    sf::RectangleShape m_areaPuerta1;
+    sf::RectangleShape m_areaPuerta2;
+    sf::RectangleShape m_areaPuerta3;
+    sf::RectangleShape m_areaPuerta4;
     // UI/objetos
     Ruleta                        m_ruleta;
     sf::Clock                     m_clock;
 
-    // Minijuego (objeto directo, no unique_ptr)
-    MinijuegoArte                 m_arteJuego;
-    bool                          m_minijuegoActivo;
 
     // Salida de este estado
     bool                          m_debeSalir = false;
+
+    static bool intersecta(const sf::FloatRect& A, const sf::FloatRect& B) {
+        return (A.position.x < B.position.x + B.size.x) &&
+               (A.position.x + A.size.x > B.position.x) &&
+               (A.position.y < B.position.y + B.size.y) &&
+               (A.position.y + A.size.y > B.position.y);
+    }
 public:
     Biblioteca(GestorEstados* gestor, sf::RenderWindow& window, Personaje& personaje);
     ~Biblioteca();
@@ -53,7 +58,7 @@ public:
     void inicializarDatosMapa();
     void ejecutarMapa(); // carga del tilemap
     void interaccionRuleta();
-    void iniciarMinijuegoPokePreguntas();
+    void interaccionPuertas();
     void setTilesValidos(const std::unordered_set<int>& nuevosTilesValidos) { m_tilesValidos = nuevosTilesValidos; }
 
     // Salir

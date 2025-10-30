@@ -514,7 +514,7 @@
 1760488719 c:\users\river\downloads\sfml-3.0.2-windows-gcc-14.2.0-mingw-64-bit\sfml-3.0.2\include\sfml\system\sleep.hpp
 	<SFML/System/Export.hpp>
 
-1761522041 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\main.cpp
+1761802323 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\main.cpp
 	<SFML/Graphics.hpp>
 	"MapaPrincipal.h"
 	"TileMap.h"
@@ -557,7 +557,7 @@
 
 1761608785 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\categorias.h
 
-1761529758 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\mapaprincipal.cpp
+1761777599 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\mapaprincipal.cpp
 	<SFML/Graphics.hpp>
 	<SFML/Graphics/Rect.hpp>
 	<vector>
@@ -605,7 +605,7 @@
 	<iostream>
 	<SFML/Graphics.hpp>
 
-1761695826 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\biblioteca.cpp
+1761802690 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\biblioteca.cpp
 	<SFML/Graphics.hpp>
 	<SFML/Graphics/Rect.hpp>
 	<SFML/Config.hpp>
@@ -618,11 +618,13 @@
 	"MapaPrincipal.h"
 	"TileMap.h"
 	"BancoPreguntas.h"
+	"MinijuegoArte.h"
 
-1761694617 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\biblioteca.h
+1761782488 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\biblioteca.h
 	<SFML/Graphics.hpp>
 	<vector>
 	<unordered_set>
+	<memory>
 	"TileMap.h"
 	"Personaje.h"
 	"MapaPrincipal.h"
@@ -648,12 +650,14 @@
 	<iostream>
 	<utility>
 
-1761696412 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\minijuegoarte.h
+1761801724 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\minijuegoarte.h
 	<SFML/Graphics.hpp>
 	<SFML/Audio.hpp>
-	<queue>
 	<array>
 	<string>
+	<vector>
+	"Estado.h"
+	"Personaje.h"
 
 1761691063 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\bancopreguntas.h
 	<iostream>
@@ -815,9 +819,10 @@
 1761674771 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\botonopcion.cpp
 	"BotonOpcion.h"
 
-1761702827 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\minijuegoarte.cpp
+1761802163 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\minijuegoarte.cpp
 	"MinijuegoArte.h"
-	<SFML/Graphics/Rect.hpp>
-	<cassert>
+	<SFML/Config.hpp>
+	<iostream>
 	<algorithm>
+	<cmath>
 

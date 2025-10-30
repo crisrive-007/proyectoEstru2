@@ -5,13 +5,14 @@
 #include <optional>
 #include <array>
 #include <cstdlib>
+
 #include "Personaje.h"
 #include "Biblioteca.h"
 #include "MapaPrincipal.h"
 #include "TileMap.h"
 #include "BancoPreguntas.h"
+#include "MinijuegoArte.h"
 
-// Si usas un banco global:
 extern BancoPreguntas banco;
 
 constexpr float RADIO_INTERACCION_RULETA = 100.0f;
@@ -45,8 +46,6 @@ Biblioteca::Biblioteca(GestorEstados* gestor, sf::RenderWindow& window, Personaj
     , m_ancho(120)
     , m_alto(67)
     , m_tilemapBase()
-    , m_arteJuego(window)
-    , m_minijuegoActivo(false)
 {
     // Ruleta
     if (m_ruleta.cargar("assets/Spinwheel/spinwheel1.png")) {
@@ -61,25 +60,21 @@ Biblioteca::Biblioteca(GestorEstados* gestor, sf::RenderWindow& window, Personaj
     m_areaSalida.setPosition({960, 1020});
     m_areaSalida.setFillColor(sf::Color(255, 0, 0, 128));
 
-    // 4 puertas: 0 ruleta, 1 minijuego, 2 teletransporte, 3 mensaje
-    const sf::Vector2f tam = m_areaSalida.getSize();
-    const std::array<sf::Vector2f,4> posiciones = {
-        sf::Vector2f{860.f,  940.f},   // 0: ruleta
-        sf::Vector2f{1060.f, 940.f},   // 1: minijuego
-        sf::Vector2f{860.f,  880.f},   // 2: teletransporte
-        sf::Vector2f{1060.f, 880.f}    // 3: mensaje
-    };
-    const std::array<sf::Color,4> colores = {
-        sf::Color(0, 128, 255, 128),   // azul
-        sf::Color(0, 200, 0, 128),     // verde
-        sf::Color(200, 150, 0, 128),   // naranja
-        sf::Color(160, 0, 160, 128)    // morado
-    };
-    for (std::size_t i = 0; i < puertas.size(); ++i) {
-        puertas[i].setSize(tam);
-        puertas[i].setPosition(posiciones[i]);
-        puertas[i].setFillColor(colores[i]);
-    }
+    m_areaPuerta1.setSize({64.f, 64.f});
+    m_areaPuerta1.setFillColor(sf::Color(0, 255, 0, 80));
+    m_areaPuerta1.setPosition({50.f, 370.f});
+
+    m_areaPuerta2.setSize({64.f, 64.f});
+    m_areaPuerta2.setFillColor(sf::Color(255, 0, 0, 60));
+    m_areaPuerta2.setPosition({50.f, 755.f});
+
+    m_areaPuerta3.setSize({64.f, 64.f});
+    m_areaPuerta3.setFillColor(sf::Color(0, 0, 255, 60));
+    m_areaPuerta3.setPosition({1806.f, 370.f});
+
+    m_areaPuerta4.setSize({64.f, 64.f});
+    m_areaPuerta4.setFillColor(sf::Color(255, 255, 0, 60));
+    m_areaPuerta4.setPosition({1806.f, 755.f});
 
     // Posición inicial del player
     m_personaje.setPosition(962, 950);
@@ -186,54 +181,16 @@ void Biblioteca::ejecutarMapa() {
 }
 
 void Biblioteca::manejarEventos(sf::RenderWindow& window) {
-    while (auto event = m_window.pollEvent()) {
-        const sf::Event& ev = *event; // desreferencia el optional
-
-        // --- cierre de ventana ---
-        if (ev.is<sf::Event::Closed>()) {
-            m_window.close();
+    while (auto event = window.pollEvent()) {
+        if (event->is<sf::Event::Closed>()) {
+            window.close();
             return;
         }
-
-        // --- eventos teclado ---
-        if (const auto* key = ev.getIf<sf::Event::KeyPressed>()) {
-            if (key->code == sf::Keyboard::Key::Escape)
-                m_window.close();
-
-            if (key->code == sf::Keyboard::Key::Space)
-                interaccionRuleta();
-
-            if (key->code == sf::Keyboard::Key::P)
-                iniciarMinijuegoPokePreguntas();
-        }
-
-        // --- eventos mouse ---
-        if (const auto* mouse = ev.getIf<sf::Event::MouseButtonPressed>()) {
-            if (mouse->button == sf::Mouse::Button::Left) {
-                if (m_minijuegoActivo) {
-                    sf::Vector2f pos(mouse->position.x, mouse->position.y);
-                    m_arteJuego.manejarEventos(ev); // ✅ deja que MinijuegoArte gestione clicks
-                }
-            }
-        }
-
-        // --- reenviar al minijuego si está activo ---
-        if (m_minijuegoActivo)
-            m_arteJuego.manejarEventos(ev);
     }
 }
 
 void Biblioteca::actualizar() {
     float deltaTime = m_clock.restart().asSeconds();
-
-    if (m_minijuegoActivo) {
-        m_arteJuego.actualizar(deltaTime);
-        // Si el minijuego tiene API para saber si terminó:
-        if (m_arteJuego.terminado()) {
-            m_minijuegoActivo = false;
-        }
-        return; // pausa el resto mientras el minijuego está arriba
-    }
 
     m_ruleta.actualizar(deltaTime);
     m_personaje.actualizar(m_tilesBase, m_ancho, m_alto);
@@ -243,34 +200,7 @@ void Biblioteca::actualizar() {
     const sf::FloatRect personajeBounds = m_personaje.obtenerHitbox();
     const sf::FloatRect triggerSalida   = m_areaSalida.getGlobalBounds();
 
-    // Disparadores por “puerta” (edge-trigger)
-    for (std::size_t i = 0; i < puertas.size(); ++i) {
-        const sf::FloatRect area = puertas[i].getGlobalBounds();
-        const bool ahora = intersecta(personajeBounds, area);
-
-        if (ahora && !colisionandoAntes[i]) {
-            switch (i) {
-                case 0: // ruleta
-                    interaccionRuleta();
-                    std::cout << "🎰 Activaste la ruleta (área 0)\n";
-                    break;
-                case 1: // minijuego
-                    if (!m_minijuegoActivo) {
-                        iniciarMinijuegoPokePreguntas();
-                        std::cout << "🎮 Minijuego iniciado (área 1)\n";
-                    }
-                    break;
-                case 2: // teletransporte
-                    m_personaje.setPosition(960.f, 860.f);
-                    std::cout << "🌀 Teletransporte (área 2)\n";
-                    break;
-                case 3: // mensaje
-                    std::cout << "💡 Consejo: acércate a la ruleta o presiona P para jugar.\n";
-                    break;
-            }
-        }
-        colisionandoAntes[i] = ahora;
-    }
+    interaccionPuertas();
 
     // Salir de la biblioteca por área roja
     if (intersecta(personajeBounds, triggerSalida)) {
@@ -278,22 +208,27 @@ void Biblioteca::actualizar() {
         gestor->sacarEstado();
         m_personaje.setPosition(915, 300);
     }
+
+    if (intersecta(personajeBounds, m_areaPuerta1.getGlobalBounds())) {
+        std::cout << "🎨 Entrando al Minijuego de Arte...\n";
+        sf::sleep(sf::seconds(0.5f));
+        std::unique_ptr<MinijuegoArte> estadoArte = std::make_unique<MinijuegoArte>(gestor, m_window, m_personaje);
+        estadoArte->iniciarCombate();
+        gestor->empujarEstado(std::move(estadoArte));
+        return; // Importante: detenemos el resto del update
+    }
 }
 
 void Biblioteca::dibujar(sf::RenderWindow& window) {
-    if (m_minijuegoActivo) {
-        m_arteJuego.dibujar();
-        return;
-    }
-
     window.draw(m_tilemapBase);
     window.draw(m_areaSalida);
-    for (const auto& a : m_areasExtra) window.draw(a);
+    window.draw(m_areaPuerta1);
+    window.draw(m_areaPuerta2);
+    window.draw(m_areaPuerta3);
+    window.draw(m_areaPuerta4);
+
     m_personaje.dibujar(window);
     m_ruleta.dibujar(window);
-
-    // Debug: puertas
-    for (const auto& p : puertas) window.draw(p);
 }
 
 void Biblioteca::interaccionRuleta() {
@@ -313,8 +248,18 @@ void Biblioteca::interaccionRuleta() {
     }
 }
 
-void Biblioteca::iniciarMinijuegoPokePreguntas() {
-    m_minijuegoActivo = true;
-    m_arteJuego.iniciarCombate(); // dentro de MinijuegoArte configura y hace reset
-    std::cout << "¡Pokémon salvaje apareció! Minijuego iniciado.\n";
+void Biblioteca::interaccionPuertas() {
+    // Bounds del jugador y de las puertas
+    const auto rectPlayer = m_personaje.obtenerHitbox();
+    const auto r1 = m_areaPuerta1.getGlobalBounds();
+    const auto r2 = m_areaPuerta2.getGlobalBounds();
+    const auto r3 = m_areaPuerta3.getGlobalBounds();
+    const auto r4 = m_areaPuerta4.getGlobalBounds();
+
+    // Usa tu helper global intersecta(...) para evitar el warning de no-usado
+    if (intersecta(rectPlayer, r1) ||
+        intersecta(rectPlayer, r2) ||
+        intersecta(rectPlayer, r3) ||
+        intersecta(rectPlayer, r4)) {
+    }
 }

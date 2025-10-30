@@ -1,73 +1,105 @@
-#ifndef MINIJUEGOARTE_H
-#define MINIJUEGOARTE_H
+#ifndef MINIJUEGO_ARTE_H
+#define MINIJUEGO_ARTE_H
 
-#pragma once
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
-#include <queue>
 #include <array>
 #include <string>
+#include <vector>
+#include "Estado.h"
+#include "Personaje.h"
 
+// Si ya tienes tu BancoPreguntas con esta firma, usa ese;
+// si no, dejamos un struct local de respaldo:
 struct Pregunta {
-    std::string pregunta;
-    std::array<std::string, 4> opciones;
-    int correcta = 0;
+    std::string enunciado;
+    std::array<std::string,4> opciones;
+    int correcta = 0; // 0=A, 1=B, 2=C, 3=D
 };
 
-class MinijuegoArte {
+class MinijuegoArte : public Estado {
 public:
-    enum class Estado {Jugando, Gano, Perdio};
+    enum class EstadoCombate { Jugando, Gano, Perdio };
+    enum class Subestado {Pregunta, Feedback};
 
-    explicit MinijuegoArte(sf::RenderWindow& window);
+    MinijuegoArte(GestorEstados* gestor, sf::RenderWindow& window, Personaje& personaje);
 
-    void manejarEventos(const sf::Event& ev);
-    void actualizar(float dt);
-    void dibujar();
+    // Ciclo de Estado (misma forma que en Biblioteca)
+    void manejarEventos(sf::RenderWindow& window) override;
+    void actualizar() override;
+    void dibujar(sf::RenderWindow& window) override;
 
-    void iniciarCombate();
+    // Control
+    void iniciarCombate();   // resetea HUD + pone primera pregunta
+    bool terminado() const { return m_estado != EstadoCombate::Jugando; }
 
-    void reset();
-    bool terminado() const ;
-    Estado estado() const;
+    void startBGM();
+    void stopBGM();
+    void onWin();
+
+    void salirDelMinijuego();
+    void onLose();
 
 private:
+    // Helpers SFML3
+    static bool containsPoint(const sf::FloatRect& r, const sf::Vector2f& p) {
+        const float x1 = r.position.x, y1 = r.position.y;
+        const float x2 = x1 + r.size.x, y2 = y1 + r.size.y;
+        return (p.x >= x1 && p.x <= x2 && p.y >= y1 && p.y <= y2);
+    }
+
     void cargarAssets();
-    void armarPreguntas();
-    void mostrarPreguntaActual();
-    void chequearClick(const sf::Vector2f& mousePos);
+    void armarPreguntas();        // Puedes reemplazar con BancoPreguntas
+    void mostrarPregunta(int idx);
     void procesarRespuesta(int idxOpcion);
     void siguientePregunta();
 
+    // Referencias
     sf::RenderWindow& m_window;
+    Personaje&        m_personaje;
 
-    sf::Font m_font;
-    //sf::SoundBuffer m_selBuf;
-    //sf::Sound m_selSnd;
+    // Textos
+    sf::Font   m_font;
+    sf::Text   m_txtPregunta;
+    sf::Text   m_txtOpcA, m_txtOpcB, m_txtOpcC, m_txtOpcD;
 
-    sf::Texture m_texBg, m_texDialog, m_texPika, m_texChari;
+    // Sprites y texturas
+    sf::Texture m_texFondo, m_texDialog, m_texPika, m_texChari;
+    sf::Sprite  m_sprFondo, m_sprDialog, m_sprPika, m_sprChari;
+
     sf::Texture m_texBtnA, m_texBtnB, m_texBtnC, m_texBtnD;
-    sf::Texture m_texHP;
+    sf::Sprite  m_btnA,    m_btnB,    m_btnC,    m_btnD;
 
-    sf::Sprite m_bg, m_dialog, m_pika, m_chari;
-    sf::Sprite m_btnA, m_btnB, m_btnC, m_btnD;
-    sf::Sprite m_hpPlayer, m_hpEnemy;
+    // Vida jugador (5 segmentos → life5 lleno … life0 vacío)
+    std::array<sf::Texture,6> m_texLife; // 0..5
+    sf::Sprite  m_sprLife;
 
-    static constexpr int m_hpFrames = 6;
-    int m_idxHPPlayer = 0;
-    int m_idxHPEnemy = 0;
+    // Estado del combate
+    int m_vidaJugador = 5;
+    EstadoCombate m_estado = EstadoCombate::Jugando;
+    Subestado m_subestado = Subestado::Pregunta;
 
-    sf::Text m_txtPregunta;
-    sf::Text m_txtA, m_txtB, m_txtC, m_txtD;
-    sf::Text m_txtFeedback;
+    int idxSeleccion = -1;
 
-    sf::FloatRect m_rectDialog;
-    sf::FloatRect m_rectLineaA, m_rectLineaB, m_rectLineaC, m_rectLineaD;
+    sf::SoundBuffer m_bufBgm;
+    sf::Sound m_bgm;
 
-    std::queue<Pregunta> m_queue;
-    std::optional<Pregunta> m_actual;
-    Estado m_estado = Estado::Jugando;
-    bool m_bloquearInput = false;
-    float m_timerFeedback = 0.f;
+    sf::SoundBuffer m_bufAdvance;
+    sf::Sound m_sndAdvance;
+
+    sf::SoundBuffer m_bufVictory;
+    sf::Sound m_sndVictory;
+
+    // Preguntas
+    std::vector<Pregunta> m_preguntas;
+    int m_idxPregunta = 0;
+    int m_respuestaCorrecta = 0;
+
+    // Reloj
+    sf::Clock m_clock;
+    float m_shakePika  = 0.f;
+    float m_shakeChari = 0.f;
+    sf::Vector2f m_pikaBase, m_chariBase;
 };
 
-#endif // MINIJUEGOARTE_H
+#endif

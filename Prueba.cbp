@@ -49,6 +49,7 @@
 		<Unit filename="include/BancoPreguntas.h" />
 		<Unit filename="include/BarraVida.h" />
 		<Unit filename="include/Biblioteca.h" />
+		<Unit filename="include/BotonOpcion.h" />
 		<Unit filename="include/Casa.h" />
 		<Unit filename="include/Categorias.h" />
 		<Unit filename="include/Estado.h" />
@@ -63,6 +64,7 @@
 		<Unit filename="main.cpp" />
 		<Unit filename="src/BarraVida.cpp" />
 		<Unit filename="src/Biblioteca.cpp" />
+		<Unit filename="src/BotonOpcion.cpp" />
 		<Unit filename="src/Casa.cpp" />
 		<Unit filename="src/GestorEstados.cpp" />
 		<Unit filename="src/MapaPrincipal.cpp" />

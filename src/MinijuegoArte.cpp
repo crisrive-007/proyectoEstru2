@@ -1,237 +1,340 @@
 #include "MinijuegoArte.h"
-#include <SFML/Graphics/Rect.hpp>
-#include <cassert>
+#include <SFML/Config.hpp>
+#include <iostream>
 #include <algorithm>
+#include <cmath>
 
-static sf::IntRect hpFrame(const sf::Texture& tex, int frames, int idx) {
-    auto sz = tex.getSize();
-    int w = static_cast<int>(sz.x) / frames;
-    int h = static_cast<int>(sz.y);
-    return sf::IntRect({idx * w, 0}, {w, h});
+static bool containsPoint(const sf::FloatRect& r, const sf::Vector2f& p) {
+    return (p.x >= r.position.x) && (p.x <= r.position.x + r.size.x) &&
+           (p.y >= r.position.y)  && (p.y <= r.position.y  + r.size.y);
 }
 
-MinijuegoArte::MinijuegoArte(sf::RenderWindow& window) : m_window(window),
-                                                         m_texBg(), m_bg(m_texBg),
-                                                         m_texDialog(), m_dialog(m_texDialog),
-                                                         m_texPika(), m_pika(m_texPika),
-                                                         m_texChari(), m_chari(m_texChari),
-                                                         m_texBtnA(), m_btnA(m_texBtnA),
-                                                         m_texBtnB(), m_btnB(m_texBtnB),
-                                                         m_texBtnC(), m_btnC(m_texBtnC),
-                                                         m_texBtnD(), m_btnD(m_texBtnD),
-                                                         m_texHP(), m_hpPlayer(m_texHP), m_hpEnemy(m_texHP),
-
-                                                         m_font(),
-                                                         m_txtPregunta(m_font),
-                                                         m_txtA(m_font),
-                                                         m_txtB(m_font),
-                                                         m_txtC(m_font),
-                                                         m_txtD(m_font),
-                                                         m_txtFeedback(m_font){
+MinijuegoArte::MinijuegoArte(GestorEstados* gestor, sf::RenderWindow& window, Personaje& personaje)
+: Estado(gestor, personaje), m_window(window), m_personaje(personaje), m_txtPregunta(m_font),
+  m_txtOpcA(m_font), m_txtOpcB(m_font), m_txtOpcC(m_font), m_txtOpcD(m_font), m_bgm(m_bufBgm), m_sndAdvance(m_bufAdvance), m_sndVictory(m_bufVictory),
+  m_sprFondo(m_texFondo), m_sprDialog(m_texDialog), m_sprPika(m_texPika), m_sprChari(m_texChari),
+  m_btnA(m_texBtnA), m_btnB(m_texBtnB), m_btnC(m_texBtnC), m_btnD(m_texBtnD), m_sprLife(m_texLife[5]){
     cargarAssets();
     armarPreguntas();
-    reset();
+    dibujar(m_window);
 }
 
 void MinijuegoArte::cargarAssets() {
-    if (!m_texBg.loadFromFile("assets/Minijuego1/escenario.png"))      throw std::runtime_error("escenario.png");
-    if (!m_texDialog.loadFromFile("assets/Minijuego1/dialog.png"))     throw std::runtime_error("dialog.png");
-    if (!m_texPika.loadFromFile("assets/Minijuego1/pikachu.png"))      throw std::runtime_error("pikachu.png");
-    if (!m_texChari.loadFromFile("assets/Minijuego1/charizard.png"))   throw std::runtime_error("charizard.png");
-
-    if (!m_texBtnA.loadFromFile("assets/Minijuego1/botonA.png"))       throw std::runtime_error("botonA.png");
-    if (!m_texBtnB.loadFromFile("assets/Minijuego1/botonB.png"))       throw std::runtime_error("botonB.png");
-    if (!m_texBtnC.loadFromFile("assets/Minijuego1/botonC.png"))       throw std::runtime_error("botonC.png");
-    if (!m_texBtnD.loadFromFile("assets/Minijuego1/botonD.png"))       throw std::runtime_error("botonD.png");
-
-    if (!m_texHP.loadFromFile("assets/Minijuego1/life.png"))           throw std::runtime_error("life.png");
-
-    if (!m_font.openFromFile("assets/Pokemon_GB.ttf"))      throw std::runtime_error("Pokemon_GB.ttf");
-
-    m_bg.setTexture(m_texBg);
-    m_dialog.setTexture(m_texDialog);
-    m_dialog.setPosition(sf::Vector2f(24.f, 16.f));
-
-    m_pika.setTexture(m_texPika);
-    m_pika.setPosition(sf::Vector2f(120.f, 360.f));
-
-    m_chari.setTexture(m_texChari);
-    m_chari.setPosition(sf::Vector2f(700.f, 160.f));
-
-    m_btnA.setTexture(m_texBtnA);  m_btnA.setPosition(sf::Vector2f(60.f, 560.f));
-    m_btnB.setTexture(m_texBtnB);  m_btnB.setPosition(sf::Vector2f(360.f, 560.f));
-    m_btnC.setTexture(m_texBtnC);  m_btnC.setPosition(sf::Vector2f(660.f, 560.f));
-    m_btnD.setTexture(m_texBtnD);  m_btnD.setPosition(sf::Vector2f(960.f, 560.f));
-
-    m_hpPlayer.setTexture(m_texHP);
-    m_hpEnemy.setTexture(m_texHP);
-    m_hpPlayer.setTextureRect(hpFrame(m_texHP, m_hpFrames, 0));
-    m_hpEnemy .setTextureRect(hpFrame(m_texHP, m_hpFrames, 0));
-    m_hpPlayer.setPosition(sf::Vector2f(180.f, 320.f));
-    m_hpEnemy .setPosition(sf::Vector2f(760.f, 90.f));
-
-    auto makeText = [&](sf::Text& t, unsigned size){
-        t.setFont(m_font);
-        t.setCharacterSize(size);
-        t.setFillColor(sf::Color::Black);
+    // === Carga de assets ===
+    auto load = [&](sf::Texture& t, const std::string& path){
+        if (!t.loadFromFile(path)) std::cerr << "Falta " << path << "\n";
     };
-    makeText(m_txtPregunta, 26);
-    makeText(m_txtA, 22); makeText(m_txtB, 22); makeText(m_txtC, 22); makeText(m_txtD, 22);
-    makeText(m_txtFeedback, 26);
+    load(m_texFondo, "assets/MinijuegoArte/escenario.png");
+    load(m_texDialog, "assets/MinijuegoArte/dialog.png");
+    load(m_texPika, "assets/MinijuegoArte/pikachu.png");
+    load(m_texChari, "assets/MinijuegoArte/charizard.png");
+    load(m_texBtnA, "assets/MinijuegoArte/botonA.png");
+    load(m_texBtnB, "assets/MinijuegoArte/botonB.png");
+    load(m_texBtnC, "assets/MinijuegoArte/botonC.png");
+    load(m_texBtnD, "assets/MinijuegoArte/botonD.png");
 
-    m_rectLineaA = {{m_btnA.getPosition().x + 46.f, m_btnA.getPosition().y + 44.f}, {250.f, 28.f} };
-    m_rectLineaB = {{m_btnB.getPosition().x + 46.f, m_btnB.getPosition().y + 44.f}, {250.f, 28.f }};
-    m_rectLineaC = {{m_btnC.getPosition().x + 46.f, m_btnC.getPosition().y + 44.f}, {250.f, 28.f }};
-    m_rectLineaD = {{m_btnD.getPosition().x + 46.f, m_btnD.getPosition().y + 44.f}, {250.f, 28.f }};
-    m_rectDialog = {{m_dialog.getPosition().x + 28.f, m_dialog.getPosition().y + 10.f}, {1030.f, 40.f }};
+    for (int i = 0; i <= 5; ++i)
+        load(m_texLife[i], "assets/MinijuegoArte/life" + std::to_string(i) + ".png");
+
+    if (!m_font.openFromFile("assets/Pokemon_GB.ttf"))
+        std::cerr << "No se pudo cargar fuente\n";
+
+    // === Fondo ===
+    m_sprFondo.setTexture(m_texFondo, true);
+    m_sprFondo.setPosition({0.f, 0.f});
+    sf::Vector2u ws = m_window.getSize();
+    sf::Vector2u ts = m_texFondo.getSize();
+    if (ts.x && ts.y) {
+        float scaleX = float(ws.x) / ts.x;
+        float targetHeight = 880.f; // Altura deseada en píxeles
+        float scaleY = targetHeight / ts.y;
+        m_sprFondo.setScale({scaleX, scaleY});
+    }
+
+    // === Diálogo ===
+    m_sprDialog.setTexture(m_texDialog, true);
+    m_sprDialog.setScale({12.0f, 2.2f});
+    m_sprDialog.setPosition({0.f, 0.f});
+
+    // === Pokémon ===
+    m_sprPika.setTexture(m_texPika, true);
+    m_sprPika.setPosition({200.f, 525.f});
+    m_pikaBase = m_sprPika.getPosition();
+
+    m_sprChari.setTexture(m_texChari, true);
+    m_sprChari.setPosition({1200.f, 140.f});
+    m_chariBase = m_sprChari.getPosition();
+
+    // === Vida ===
+    m_sprLife.setTexture(m_texLife[5], true);
+    m_sprLife.setPosition({200.f, 600.f});
+
+    // === Botones ===
+    float baseY = 880.f;
+    float spaceX = 505.f;
+    m_btnA.setTexture(m_texBtnA, true); m_btnA.setPosition({0.f, baseY});
+    m_btnB.setTexture(m_texBtnB, true); m_btnB.setPosition({0.f + spaceX, baseY});
+    m_btnC.setTexture(m_texBtnC, true); m_btnC.setPosition({0.f + spaceX * 2, baseY});
+    m_btnD.setTexture(m_texBtnD, true); m_btnD.setPosition({0.f + spaceX * 3, baseY});
+
+    // === Textos ===
+    auto setupText = [&](sf::Text& t){
+        t.setFont(m_font);
+        t.setCharacterSize(25);
+        t.setFillColor(sf::Color::Black);
+        t.setScale({0.8f, 1.0f});
+    };
+    setupText(m_txtPregunta);
+    setupText(m_txtOpcA);
+    setupText(m_txtOpcB);
+    setupText(m_txtOpcC);
+    setupText(m_txtOpcD);
+
+    m_txtPregunta.setPosition({100.f, 40.f});
+
+    // Centrar los textos sobre cada botón
+    m_txtOpcA.setPosition({m_btnA.getPosition().x + 40.f, baseY + 85.f});
+    m_txtOpcB.setPosition({m_btnB.getPosition().x + 40.f, baseY + 85.f});
+    m_txtOpcC.setPosition({m_btnC.getPosition().x + 40.f, baseY + 85.f});
+    m_txtOpcD.setPosition({m_btnD.getPosition().x + 40.f, baseY + 85.f});
+
+    if(m_bufBgm.loadFromFile("assets/MinijuegoArte/bgm.mp3")){
+        m_bgm.setBuffer(m_bufBgm);
+        m_bgm.setLooping(false);
+        m_bgm.setVolume(100.f);
+    }
+
+    if (m_bufAdvance.loadFromFile("assets/MinijuegoArte/advance.mp3")) {
+        m_sndAdvance.setBuffer(m_bufAdvance);
+        m_sndAdvance.setVolume(100.f);
+    }
+
+    if(m_bufVictory.loadFromFile("assets/MinijuegoArte/victory.mp3")) {
+        m_sndVictory.setBuffer(m_bufVictory);
+        m_sndVictory.setVolume(100.f);
+    }
 }
 
 void MinijuegoArte::armarPreguntas() {
-    std::queue<Pregunta> q;
-    q.push({"Uno de los siguientes personajes fue el encargado de pintar la capilla Sixtina:", {"Miguel �ngel","Donatello","Leonardo Da Vinci","Francis Bacon"}, 0});
-    m_queue = std::move(q);
+    m_preguntas.clear();
+    m_preguntas.push_back({"Uno de los siguientes personajes fue el encargado de pintar la capilla Sixtina:",
+        {"Miguel Angel","Donatello","Leonardo Da\n\nVinci","Francis Bacon"}, 0});
+    m_preguntas.push_back({"Genio del renacimiento que esculpio el Moises, el David y la Pieta:",
+        {"Miguel Angel\n\nBuonarroti","Leonardo Da\n\nVinci","Rafael Sanzio","Galileo Galilei"}, 0});
+    m_preguntas.push_back({"Durante el renacimiento el estilo artistico que impregno el arte, la filosofia, la pintura,\nla escritura fue el:",
+        {"El Gotico","El Barroco","El Clasicismo","EL Romanticismo"}, 1});
+    m_preguntas.push_back({"Durante el renacimiento surge una nueva vision del hombre, que se vio reflejada en el arte,\nen la politica y en las ciencias sociales y humanas, a lo que se denomina:",
+        {"Antropocentrismo","Humanismo","Paradigma antropologico","Teocentrismo"}, 1});
+    m_preguntas.push_back({"Cuatro genios del renacimiento (Leonardo, Donatello, Rafael y Michelangelo) han sido\nllevados a la pantalla en los comics de:",
+        {"Las tortugas ninjas","Los caballeros del Zodiaco","Los cuatro fantasticos","Los antagonistas de Attack Titan"}, 0});
 }
 
 void MinijuegoArte::iniciarCombate() {
-    reset();
+    startBGM();
+    m_window.setView(m_window.getDefaultView());
+
+    m_estado = EstadoCombate::Jugando;
+    m_vidaJugador = 5;
+    m_idxPregunta = 0;
+
+    m_sprFondo.setPosition({0.f, 0.f});
+
+    mostrarPregunta(m_idxPregunta);
 }
 
-void MinijuegoArte::reset() {
-    while(!m_queue.empty()) m_queue.pop();
-    armarPreguntas();
-    m_idxHPPlayer = 0;
-    m_idxHPEnemy = 0;
-    m_estado = Estado::Jugando;
-    m_bloquearInput = false;
-    m_timerFeedback = 0.f;
-    m_hpPlayer.setTextureRect(hpFrame(m_texHP, m_hpFrames, m_idxHPPlayer));
-    m_hpEnemy .setTextureRect(hpFrame(m_texHP, m_hpFrames, m_idxHPEnemy));
-    siguientePregunta();
+void MinijuegoArte::mostrarPregunta(int idx) {
+    if (idx < 0 || idx >= static_cast<int>(m_preguntas.size())) {
+        m_estado = EstadoCombate::Gano;
+        stopBGM();
+        onWin();
+        m_subestado = Subestado::Feedback;
+        if (m_estado == EstadoCombate::Gano || m_estado == EstadoCombate::Perdio) {
+            if(m_vidaJugador == 5) {
+                m_txtPregunta.setString("¡Felicidades! Has ganado una vida extra... (Presiona ENTER)");
+            } else {
+                m_txtPregunta.setString("¡Felicidades! Has ganado... (Presiona ENTER)");
+
+            }
+        }
+
+        m_subestado = Subestado::Feedback;
+        idxSeleccion = -1;
+        return;
+    }
+
+    const auto& p = m_preguntas[idx];
+    m_txtPregunta.setString(p.enunciado);
+    m_txtOpcA.setString(p.opciones[0]);
+    m_txtOpcB.setString(p.opciones[1]);
+    m_txtOpcC.setString(p.opciones[2]);
+    m_txtOpcD.setString(p.opciones[3]);
+    m_respuestaCorrecta = p.correcta;
+
+    m_subestado    = Subestado::Pregunta;
+    idxSeleccion = -1;
+
+    // Reinicia escalas (por si quedó un hover aplicado)
+    m_btnA.setScale({1.f,1.f}); m_btnB.setScale({1.f,1.f});
+    m_btnC.setScale({1.f,1.f}); m_btnD.setScale({1.f,1.f});
+    m_txtOpcA.setScale({1.f,1.f}); m_txtOpcB.setScale({1.f,1.f});
+    m_txtOpcC.setScale({1.f,1.f}); m_txtOpcD.setScale({1.f,1.f});
+
+    // Reset de temblores y posiciones base
+    m_sprPika.setPosition(m_pikaBase);
+    m_sprChari.setPosition(m_chariBase);
+    m_shakePika = m_shakeChari = 0.f;
 }
 
 void MinijuegoArte::siguientePregunta() {
-    if (m_queue.empty()) { m_estado = Estado::Gano; m_actual.reset(); return; }
-    m_actual = m_queue.front(); m_queue.pop();
-    mostrarPreguntaActual();
+    ++m_idxPregunta;
+    mostrarPregunta(m_idxPregunta);
 }
 
-void MinijuegoArte::mostrarPreguntaActual() {
-    assert(m_actual.has_value());
+void MinijuegoArte::procesarRespuesta(int idxOpcion) {
+    if (m_estado != EstadoCombate::Jugando || m_subestado != Subestado::Pregunta) return;
 
-    // 1) Actualiza textos
-    m_txtPregunta.setString(m_actual->pregunta);
-    m_txtA.setString(m_actual->opciones[0]);
-    m_txtB.setString(m_actual->opciones[1]);
-    m_txtC.setString(m_actual->opciones[2]);
-    m_txtD.setString(m_actual->opciones[3]);
+    idxSeleccion = idxOpcion;
+    bool ok = (idxOpcion == m_respuestaCorrecta);
 
-    // 2) Helper: centrar texto dentro de un FloatRect usando sus campos
-    auto centerIn = [](sf::Text& t, const sf::FloatRect& r) {
-        // Centro del rect destino
-        const sf::Vector2f center{ r.position.x + r.size.x * 0.5f, r.position.y + r.size.y * 0.5f };
-
-        // Bounds locales del texto (considera offset del glyph)
-        const sf::FloatRect b = t.getLocalBounds();
-
-        // Centrar el origen en el texto
-        t.setOrigin({b.position.x + b.size.x * 0.5f, b.position.y + b.size.y * 0.5f});
-
-        // Posicionar el texto en el centro del rect
-        t.setPosition(center);
-    };
-
-    // 3) Centrar cada elemento en su rect�ngulo correspondiente
-    centerIn(m_txtPregunta, m_rectDialog);
-    centerIn(m_txtA,        m_rectLineaA);
-    centerIn(m_txtB,        m_rectLineaB);
-    centerIn(m_txtC,        m_rectLineaC);
-    centerIn(m_txtD,        m_rectLineaD);
-}
-
-
-void MinijuegoArte::manejarEventos(const sf::Event& ev) {
-    if (m_estado != Estado::Jugando || m_bloquearInput) return;
-
-    if (const auto* mouseEvent = ev.getIf<sf::Event::MouseButtonPressed>()) {
-        if (mouseEvent->button == sf::Mouse::Button::Left) {
-            sf::Vector2f m(mouseEvent->position.x, mouseEvent->position.y);
-            chequearClick(m);
-        }
-    }
-
-    if (const auto* keyEvent = ev.getIf<sf::Event::KeyPressed>()) {
-        if      (keyEvent->code == sf::Keyboard::Key::A) procesarRespuesta(0);
-        else if (keyEvent->code == sf::Keyboard::Key::B) procesarRespuesta(1);
-        else if (keyEvent->code == sf::Keyboard::Key::C) procesarRespuesta(2);
-        else if (keyEvent->code == sf::Keyboard::Key::D) procesarRespuesta(3);
-    }
-}
-
-void MinijuegoArte::chequearClick(const sf::Vector2f& p) {
-    auto hit = [&](const sf::Sprite& s){ return s.getGlobalBounds().contains(p); };
-    if (hit(m_btnA)) { procesarRespuesta(0); return; }
-    if (hit(m_btnB)) { procesarRespuesta(1); return; }
-    if (hit(m_btnC)) { procesarRespuesta(2); return; }
-    if (hit(m_btnD)) { procesarRespuesta(3); return; }
-}
-
-void MinijuegoArte::procesarRespuesta(int idx) {
-    if(!m_actual) return;
-
-    bool ok = (idx == m_actual->correcta);
+    m_sndAdvance.play();
 
     if (ok) {
-        m_idxHPEnemy = std::min(m_hpFrames-1, m_idxHPEnemy+1);
-        m_hpEnemy.setTextureRect(hpFrame(m_texHP, m_hpFrames, m_idxHPEnemy));
-        m_txtFeedback.setString("�Ataque efectivo!");
+        m_txtPregunta.setString("¡Correcto! PIKACHU usó Impactrueno... (Presiona ENTER)");
+        m_shakeChari = 0.45f;
     } else {
-        m_idxHPPlayer = std::min(m_hpFrames-1, m_idxHPPlayer+1);
-        m_hpPlayer.setTextureRect(hpFrame(m_texHP, m_hpFrames, m_idxHPPlayer));
-        m_txtFeedback.setString("�Fallaste! Recibes da�o.");
+        m_txtPregunta.setString("¡Incorrecto! CHARIZARD usó Lanzallamas... (Presiona ENTER)");
+        m_vidaJugador = std::max(0, m_vidaJugador - 1);
+        m_sprLife.setTexture(m_texLife[m_vidaJugador]);
+        m_shakePika = 0.45f;               // sacudida en Pikachu
+        if (m_vidaJugador == 0) {
+            m_estado = EstadoCombate::Perdio;
+            onLose();
+        }
     }
 
-    m_txtFeedback.setFont(m_font);
-    m_txtFeedback.setCharacterSize(26);
-    m_txtFeedback.setFillColor(sf::Color::Black);
-    auto b = m_txtFeedback.getLocalBounds();
-    m_txtFeedback.setOrigin({b.position.x + b.size.x/2.f, b.position.y + b.size.y/2.f});
-    m_txtFeedback.setPosition({m_rectDialog.position.x + m_rectDialog.size.x/2.f, m_rectDialog.position.y + m_rectDialog.size.y/2.f});
-
-    m_bloquearInput = true;
-    m_timerFeedback = 0.f;
-
-    if (m_idxHPEnemy == m_hpFrames-1) { m_estado = Estado::Gano; }
-    else if (m_idxHPPlayer == m_hpFrames-1) { m_estado = Estado::Perdio; }
+    m_subestado = Subestado::Feedback;
 }
 
-void MinijuegoArte::actualizar(float dt) {
-    if (m_bloquearInput) {
-        m_timerFeedback += dt;
-        if (m_timerFeedback >= 0.9f) {
-            m_bloquearInput = false;
-            m_timerFeedback = 0.f;
-            if (m_estado == Estado::Jugando) siguientePregunta();
+void MinijuegoArte::manejarEventos(sf::RenderWindow& window) {
+    while (auto ev = window.pollEvent()) {
+        if (ev->is<sf::Event::Closed>()) { window.close(); return; }
+
+        if (auto* kb = ev->getIf<sf::Event::KeyPressed>()) {
+            if (kb->code == sf::Keyboard::Key::Enter) {
+                if (m_subestado == Subestado::Feedback) {
+                    if (m_estado == EstadoCombate::Jugando) {
+                        siguientePregunta();
+                        return;
+                    }
+
+                    if (m_estado == EstadoCombate::Gano || m_estado == EstadoCombate::Perdio) {
+                        salirDelMinijuego();
+                        return;
+                    }
+                }
+            }
+        }
+
+        if (auto* mb = ev->getIf<sf::Event::MouseButtonPressed>()) {
+            if (mb->button == sf::Mouse::Button::Left) {
+                if (m_subestado != Subestado::Pregunta) continue; // bloqueado durante feedback
+                const sf::Vector2i mposI = sf::Mouse::getPosition(window);
+                const sf::Vector2f mpos  = { float(mposI.x), float(mposI.y) };
+
+                if (containsPoint(m_btnA.getGlobalBounds(), mpos)) { procesarRespuesta(0); }
+                else if (containsPoint(m_btnB.getGlobalBounds(), mpos)) { procesarRespuesta(1); }
+                else if (containsPoint(m_btnC.getGlobalBounds(), mpos)) { procesarRespuesta(2); }
+                else if (containsPoint(m_btnD.getGlobalBounds(), mpos)) { procesarRespuesta(3); }
+            }
         }
     }
 }
 
-void MinijuegoArte::dibujar() {
-    m_window.draw(m_bg);
-    m_window.draw(m_pika);
-    m_window.draw(m_chari);
+void MinijuegoArte::actualizar() {
+    // dt
+    float dt = m_clock.restart().asSeconds();
 
-    m_window.draw(m_hpPlayer);
-    m_window.draw(m_hpEnemy);
+    // --- SHAKES ---
+    auto applyShake = [&](sf::Sprite& spr, sf::Vector2f base, float& timer){
+        if (timer > 0.f) {
+            timer -= dt;
+            float t = std::max(0.f, timer);
+            float amp = 6.f * (t / 0.45f);                // decae hacia 0
+            float ox = std::sin(50.f * (0.45f - t)) * amp;
+            float oy = std::cos(60.f * (0.45f - t)) * amp * 0.5f;
+            spr.setPosition(base + sf::Vector2f{ox, oy});
+            if (timer <= 0.f) spr.setPosition(base);
+        }
+    };
+    applyShake(m_sprPika,  m_pikaBase,  m_shakePika);
+    applyShake(m_sprChari, m_chariBase, m_shakeChari);
 
-    m_window.draw(m_dialog);
-    if (m_bloquearInput) m_window.draw(m_txtFeedback);
-    else                 m_window.draw(m_txtPregunta);
+    // --- HOVER: escala botón + texto a la vez ---
+    const sf::Vector2i mposI = sf::Mouse::getPosition(m_window);
+    const sf::Vector2f mpos  = { float(mposI.x), float(mposI.y) };
 
-    m_window.draw(m_btnA); m_window.draw(m_btnB);
-    m_window.draw(m_btnC); m_window.draw(m_btnD);
-    m_window.draw(m_txtA); m_window.draw(m_txtB);
-    m_window.draw(m_txtC); m_window.draw(m_txtD);
+    auto hoverPair = [&](sf::Sprite& btn, sf::Text& txt){
+        bool over = containsPoint(btn.getGlobalBounds(), mpos) && (m_subestado == Subestado::Pregunta);
+        float s = over ? 1.08f : 1.0f;
+        btn.setScale({s, s});
+
+        // Aumentar también el texto (escala) y compensar posición para que se vea centrado
+        txt.setScale({s, s});
+        // Recalibrar: mueve un poco a la izquierda/arriba cuando crece
+        // (ajuste fino para tus botones; si cambias gráficos, quizá quieras tocar estos 2 px)
+        /*sf::Vector2f base = txt.getPosition();
+        if (over) txt.setPosition({base.x - 6.f, base.y - 4.f});
+        else      txt.setPosition({base.x + 6.f, base.y + 4.f}); */// vuelve al sitio original
+    };
+
+    hoverPair(m_btnA, m_txtOpcA);
+    hoverPair(m_btnB, m_txtOpcB);
+    hoverPair(m_btnC, m_txtOpcC);
+    hoverPair(m_btnD, m_txtOpcD);
 }
 
-bool MinijuegoArte::terminado() const { return m_estado != Estado::Jugando; }
-MinijuegoArte::Estado MinijuegoArte::estado() const { return m_estado; }
+void MinijuegoArte::dibujar(sf::RenderWindow& window) {
+    window.setView(window.getDefaultView());
+    window.draw(m_sprFondo);
+    window.draw(m_sprPika);
+    window.draw(m_sprChari);
+
+    window.draw(m_sprDialog);
+    window.draw(m_btnA); window.draw(m_btnB);
+    window.draw(m_btnC); window.draw(m_btnD);
+
+    window.draw(m_txtPregunta);
+    window.draw(m_txtOpcA); window.draw(m_txtOpcB);
+    window.draw(m_txtOpcC); window.draw(m_txtOpcD);
+}
+
+void MinijuegoArte::startBGM() {
+    if(!m_bgm.isLooping()) {
+        m_bgm.play();
+        m_bgm.setLooping(true);
+    }
+}
+
+void MinijuegoArte::stopBGM() {
+    if(m_bgm.isLooping()) {
+        m_bgm.stop();
+        m_bgm.setLooping(false);
+    }
+}
+
+void MinijuegoArte::onWin() {
+    stopBGM();
+    m_sndVictory.play();
+    m_txtPregunta.setString("¡Has ganado! ♫");
+}
+
+void MinijuegoArte::salirDelMinijuego() {
+    m_bgm.stop();
+    gestor->sacarEstado();
+    personaje.setPosition(60, 400);
+}
+
+void MinijuegoArte::onLose() {
+    stopBGM();
+    m_txtPregunta.setString("Has perdido...\nPresiona ENTER para salir");
+}
