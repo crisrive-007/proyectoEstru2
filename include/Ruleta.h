@@ -16,6 +16,15 @@ class Ruleta
         sf::Vector2f getPosition() const;
         const sf::CircleShape& getCirculoColision() const;
 
+        sf::FloatRect getBounds() const;
+        bool estaGirando() const;
+        bool enReposo()const;
+        float getAnguloGrados() const;
+        int getIndiceResultado(int segmentos = 4) const;
+        std::string getTextoResultado() const;
+
+        void actualizarHitbox();
+
     protected:
 
     private:

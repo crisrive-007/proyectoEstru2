@@ -6,47 +6,32 @@ Ruleta::Ruleta() : m_textura(), m_texturaCentro(), m_sprite(m_textura), m_sprite
 }
 
 bool Ruleta::cargar(const std::string& rutaTexturaRuleta) {
-    std::cout << "Intentando cargar: " << rutaTexturaRuleta << std::endl;
-
-    // Cargar la textura de la Ruleta (igual que antes)
     if (!m_textura.loadFromFile(rutaTexturaRuleta)) {
-        std::cerr << "ERROR: No se pudo cargar la textura de la ruleta" << std::endl;
+        std::cerr << "ERROR: No se pudo cargar textura ruleta\n";
         return false;
     }
 
     m_sprite.setTexture(m_textura, true);
-    m_sprite.setScale(sf::Vector2f(0.3f, 0.3f));
+    m_sprite.setScale({0.3f, 0.3f});
+    sf::Vector2u tam = m_textura.getSize();
+    m_sprite.setOrigin({tam.x / 2.f, tam.y / 2.f});
 
-    sf::Vector2u tamanoRuleta = m_textura.getSize();
-    m_sprite.setOrigin({tamanoRuleta.x / 2.0f, tamanoRuleta.y / 2.0f});
-
-    std::cout << "✓ Textura Ruleta cargada exitosamente!" << std::endl;
-    std::cout << "  - Tamaño: " << tamanoRuleta.x << "x" << tamanoRuleta.y << " píxeles" << std::endl;
-    std::cout << "  - Origen: (" << tamanoRuleta.x / 2.0f << ", " << tamanoRuleta.y / 2.0f << ")" << std::endl;
-
-    // --- NUEVO: Cargar y configurar el Sprite del Centro ---
-    std::cout << "Intentando cargar textura del centro: " << std::endl;
     if (!m_texturaCentro.loadFromFile("assets/Spinwheel/arrow.png")) {
-        std::cerr << "ERROR: No se pudo cargar la textura del centro de la ruleta" << std::endl;
-        // Si el centro no carga, decidimos si fallar o solo registrar un error.
-        // Aquí decidimos continuar, pero el sprite del centro estará vacío.
-        // Para este ejemplo, si falla la ruleta central, fallamos la carga total.
+        std::cerr << "ERROR: No se pudo cargar arrow.png\n";
         return false;
     }
 
     m_spriteCentro.setTexture(m_texturaCentro, true);
-    // Ajustar la escala del centro. Puedes querer que sea más pequeño que la ruleta.
-    m_spriteCentro.setScale(sf::Vector2f(0.1f, 0.1f));
+    m_spriteCentro.setScale({0.1f, 0.1f});
+    sf::Vector2u tamCentro = m_texturaCentro.getSize();
+    m_spriteCentro.setOrigin({tamCentro.x / 2.f, tamCentro.y / 2.f});
+    m_spriteCentro.setRotation(sf::degrees(0));
 
-    sf::Vector2u tamanoCentro = m_texturaCentro.getSize();
-    // Establecer el origen al centro de la textura del centro
-    m_spriteCentro.setOrigin({tamanoCentro.x / 2.0f, tamanoCentro.y / 2.0f});
-
-    std::cout << "✓ Textura Centro cargada exitosamente!" << std::endl;
-    std::cout << "  - Tamaño Centro: " << tamanoCentro.x << "x" << tamanoCentro.y << " píxeles" << std::endl;
-    std::cout << "  - Origen Centro: (" << tamanoCentro.x / 2.0f << ", " << tamanoCentro.y / 2.0f << ")" << std::endl;
-    // --------------------------------------------------------
-
+    // hitbox circular
+    m_circuloColision.setFillColor(sf::Color(0,0,0,0));
+    m_circuloColision.setOutlineThickness(2.f);
+    m_circuloColision.setOutlineColor(sf::Color(255,255,255,60));
+    actualizarHitbox();
     return true;
 }
 
@@ -91,4 +76,53 @@ sf::Vector2f Ruleta::getPosition() const {
 
 const sf::CircleShape& Ruleta::getCirculoColision() const {
     return m_circuloColision;
+}
+
+void Ruleta::actualizarHitbox() {
+    const auto tex = m_textura.getSize();
+    const float escalaX = m_sprite.getScale().x;
+    const float escalaY = m_sprite.getScale().y;
+    const float w = tex.x * escalaX;
+    const float h = tex.y * escalaY;
+    const float radio = 0.5f * std::max(w, h);
+    m_circuloColision.setRadius(radio);
+    m_circuloColision.setOrigin({radio, radio});
+    m_circuloColision.setPosition(m_sprite.getPosition());
+}
+
+sf::FloatRect Ruleta::getBounds() const {
+    return m_sprite.getGlobalBounds(); // usa el sprite como AABB
+}
+
+bool Ruleta::estaGirando() const {
+    return m_velocidadRotacion > 0.0f;
+}
+
+bool Ruleta::enReposo() const {
+    return m_velocidadRotacion <= 0.0f;
+}
+
+float Ruleta::getAnguloGrados() const {
+    return m_sprite.getRotation().asDegrees(); // SFML 3 devuelve Angle; .value son grados
+}
+
+int Ruleta::getIndiceResultado(int segmentos) const {
+    // 0° está arriba (flecha)
+    const float offsetDeg = 0.f; // si tu flecha apunta a otro lado, ajusta aquí (por ejemplo 90.f o -90.f)
+    float ang = std::fmod(getAnguloGrados() + 360.f + offsetDeg, 360.f);
+    float tam = 360.f / segmentos;
+
+    // Invertimos sentido para coincidir con sentido visual de la textura
+    int idx = static_cast<int>((360.f - ang) / tam) % segmentos;
+    return idx;
+}
+
+std::string Ruleta::getTextoResultado() const {
+    static const char* nombres[4] = {
+        "Politica",     // Sector superior izquierdo (azul)
+        "Ciencia", // Superior derecho (rojo)
+        "Historia", // Inferior izquierdo (amarillo)
+        "Arte"   // Inferior derecho (verde)
+    };
+    return nombres[getIndiceResultado(4)];
 }

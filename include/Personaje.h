@@ -10,7 +10,7 @@ public:
     enum Estado { Quieto, Caminar, Atacar, Herido, Celebrar };
     enum Direccion {Arriba = 0, Abajo = 2, Izquierda = 1, Derecha = 3};
 
-    // Constructor modificado para recibir tiles válidos
+    // Constructor modificado para recibir tiles vï¿½lidos
     Personaje(float vel, const std::unordered_set<int>& tilesValidosParam);
 
     void cargarTodasLasTexturas();
@@ -31,6 +31,7 @@ public:
     void actualizar(const std::vector<int>& tiles, const std::vector<int>& objetos,
                    unsigned int mapWidth, unsigned int mapHeight);
     void actualizar(const std::vector<int>& tiles, unsigned int mapWidth, unsigned int mapHeight);
+    void actualizarSinTiles(float anchoVentana, float altoVentana);
     void dibujar(sf::RenderWindow& ventana);
 
     sf::Vector2f obtenerPosicion() const;
@@ -62,10 +63,10 @@ private:
     Direccion ultima;
     float radioColision;
 
-    // Tiles válidos ahora se recibe como parámetro
+    // Tiles vï¿½lidos ahora se recibe como parï¿½metro
     std::unordered_set<int> tilesValidos;
 
-    // Constantes de animación
+    // Constantes de animaciï¿½n
     static const int frameWidth = 64;
     static const int frameHeight = 64;
     static const float animSpeed;

@@ -12,6 +12,7 @@
 #include "Ruleta.h"
 #include "MinijuegoArte.h"
 #include "BancoPreguntas.h"
+#include "MinijuegoPolitica.h"
 
 class Biblioteca : public Estado {
 private:
@@ -25,7 +26,7 @@ private:
     unsigned int                  m_alto;
     TileMap                       m_tilemapBase;
 
-    // Áreas
+    // ï¿½reas
     sf::RectangleShape            m_areaSalida;
     sf::RectangleShape m_areaPuerta1;
     sf::RectangleShape m_areaPuerta2;

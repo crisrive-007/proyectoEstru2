@@ -510,17 +510,17 @@ void Personaje::actualizarEnInterior() {
         float velocidad = 100.f;
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up)) {
-        movimiento.y = -velocidad;
-    }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down)) {
-        movimiento.y = velocidad;
-    }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left)) {
-        movimiento.x = -velocidad;
-    }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right)) {
-        movimiento.x = velocidad;
-    }
+            movimiento.y = -velocidad;
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down)) {
+            movimiento.y = velocidad;
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left)) {
+            movimiento.x = -velocidad;
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right)) {
+            movimiento.x = velocidad;
+        }
 
         movimiento *= deltaTime;
         sprite.move(movimiento);
@@ -531,7 +531,18 @@ void Personaje::actualizarEnInterior() {
         if (pos.y < 0) sprite.setPosition({pos.x, 0});
         if (pos.x > 800) sprite.setPosition({800, pos.y}); // Ajustar según el tamaño
         if (pos.y > 600) sprite.setPosition({pos.x, 600}); // Ajustar según el tamaño
-    }
+}
+
+void Personaje::actualizarSinTiles(float anchoVentana, float altoVentana) {
+    // 1) mover() ya lee teclado y ajusta estado (Caminar/Quieto) sin colisiones
+    mover();  // usa WASD/arrow keys, normaliza diagonales y setea estado
+
+    // 2) avanza la animación según el estado actual
+    actualizarAnimacion();
+
+    // 3) recorta para que no se salga del viewport
+    limitarBordes(anchoVentana, altoVentana);
+}
 
 Personaje::~Personaje()
 {

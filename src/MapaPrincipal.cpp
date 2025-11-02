@@ -19,7 +19,7 @@ MapaPrincipal::MapaPrincipal(GestorEstados* gestor, sf::RenderWindow& window, Pe
 
     m_cuadradoBiblioteca.setSize(sf::Vector2f(32, 32)); // Tamaño 2x2 tiles (16x16 cada uno)
     m_cuadradoBiblioteca.setPosition({930, 290}); // Posición en el mapa donde quieras el trigger
-    m_cuadradoBiblioteca.setFillColor(sf::Color(255, 0, 0, 128)); // Rojo semitransparente para debug
+    m_cuadradoBiblioteca.setFillColor(sf::Color(0, 0, 0, 0)); // Rojo semitransparente para debug
 
     inicializarDatosMapa();
 }

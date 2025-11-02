@@ -12,6 +12,7 @@
 #include "TileMap.h"
 #include "BancoPreguntas.h"
 #include "MinijuegoArte.h"
+#include "MinijuegoPolitica.h"
 
 extern BancoPreguntas banco;
 
@@ -215,7 +216,15 @@ void Biblioteca::actualizar() {
         std::unique_ptr<MinijuegoArte> estadoArte = std::make_unique<MinijuegoArte>(gestor, m_window, m_personaje);
         estadoArte->iniciarCombate();
         gestor->empujarEstado(std::move(estadoArte));
-        return; // Importante: detenemos el resto del update
+        return;
+    }
+
+    if(intersecta(personajeBounds, m_areaPuerta2.getGlobalBounds())) {
+        sf::sleep(sf::seconds(0.5f));
+        std::unique_ptr<MinijuegoPolitica> estadoPolitica = std::make_unique<MinijuegoPolitica>(gestor, m_window, m_personaje);
+        estadoPolitica->iniciar();
+        gestor->empujarEstado(std::move(estadoPolitica));
+        return;
     }
 }
 

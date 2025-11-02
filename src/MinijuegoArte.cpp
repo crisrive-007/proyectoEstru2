@@ -199,10 +199,10 @@ void MinijuegoArte::procesarRespuesta(int idxOpcion) {
     m_sndAdvance.play();
 
     if (ok) {
-        m_txtPregunta.setString("¡Correcto! PIKACHU usó Impactrueno... (Presiona ENTER)");
+        m_txtPregunta.setString("¡Correcto! PIKACHU uso Impactrueno... (Presiona ENTER)");
         m_shakeChari = 0.45f;
     } else {
-        m_txtPregunta.setString("¡Incorrecto! CHARIZARD usó Lanzallamas... (Presiona ENTER)");
+        m_txtPregunta.setString("¡Incorrecto! CHARIZARD uso Lanzallamas... (Presiona ENTER)");
         m_vidaJugador = std::max(0, m_vidaJugador - 1);
         m_sprLife.setTexture(m_texLife[m_vidaJugador]);
         m_shakePika = 0.45f;               // sacudida en Pikachu
@@ -325,7 +325,8 @@ void MinijuegoArte::stopBGM() {
 void MinijuegoArte::onWin() {
     stopBGM();
     m_sndVictory.play();
-    m_txtPregunta.setString("¡Has ganado! ♫");
+    m_txtPregunta.setString("Has ganado... (Presiona ENTER para salir)");
+    m_sprChari.setColor(sf::Color(255,255,255,0));
 }
 
 void MinijuegoArte::salirDelMinijuego() {
@@ -336,5 +337,5 @@ void MinijuegoArte::salirDelMinijuego() {
 
 void MinijuegoArte::onLose() {
     stopBGM();
-    m_txtPregunta.setString("Has perdido...\nPresiona ENTER para salir");
+    m_txtPregunta.setString("Has perdido... (Presiona ENTER para salir)");
 }
