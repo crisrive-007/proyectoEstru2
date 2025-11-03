@@ -605,7 +605,7 @@
 	<iostream>
 	<SFML/Graphics.hpp>
 
-1762036753 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\biblioteca.cpp
+1762135191 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\biblioteca.cpp
 	<SFML/Graphics.hpp>
 	<SFML/Graphics/Rect.hpp>
 	<SFML/Config.hpp>
@@ -620,8 +620,10 @@
 	"BancoPreguntas.h"
 	"MinijuegoArte.h"
 	"MinijuegoPolitica.h"
+	"MinijuegoCiencia.h"
+	"MinijuegoHistoria.h"
 
-1762036731 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\biblioteca.h
+1762129046 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\biblioteca.h
 	<SFML/Graphics.hpp>
 	<vector>
 	<unordered_set>
@@ -634,6 +636,8 @@
 	"MinijuegoArte.h"
 	"BancoPreguntas.h"
 	"MinijuegoPolitica.h"
+	"MinijuegoCiencia.h"
+	"MinijuegoHistoria.h"
 
 1761268932 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\estado.h
 	<SFML/Graphics.hpp>
@@ -828,7 +832,7 @@
 	<algorithm>
 	<cmath>
 
-1762052782 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\minijuegopolitica.cpp
+1762120754 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\minijuegopolitica.cpp
 	"MinijuegoPolitica.h"
 	<iostream>
 	<algorithm>
@@ -841,4 +845,31 @@
 	<string>
 	"Estado.h"
 	"Personaje.h"
+
+1762120829 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\minijuegociencia.cpp
+	"MinijuegoCiencia.h"
+	<iostream>
+	<algorithm>
+
+1762109008 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\minijuegociencia.h
+	<SFML/Graphics.hpp>
+	<SFML/Audio.hpp>
+	<array>
+	<string>
+	<vector>
+	"Estado.h"
+	"Personaje.h"
+
+1762135097 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\minijuegohistoria.h
+	<SFML/Graphics.hpp>
+	<SFML/Audio.hpp>
+	<array>
+	<vector>
+	<string>
+	"Estado.h"
+	"Personaje.h"
+
+1762138278 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\minijuegohistoria.cpp
+	"MinijuegoHistoria.h"
+	<iostream>
 

@@ -13,6 +13,8 @@
 #include "BancoPreguntas.h"
 #include "MinijuegoArte.h"
 #include "MinijuegoPolitica.h"
+#include "MinijuegoCiencia.h"
+#include "MinijuegoHistoria.h"
 
 extern BancoPreguntas banco;
 
@@ -224,6 +226,22 @@ void Biblioteca::actualizar() {
         std::unique_ptr<MinijuegoPolitica> estadoPolitica = std::make_unique<MinijuegoPolitica>(gestor, m_window, m_personaje);
         estadoPolitica->iniciar();
         gestor->empujarEstado(std::move(estadoPolitica));
+        return;
+    }
+
+    if(intersecta(personajeBounds, m_areaPuerta3.getGlobalBounds())) {
+        sf::sleep(sf::seconds(0.5f));
+        std::unique_ptr<MinijuegoCiencia> estadoCiencia = std::make_unique<MinijuegoCiencia>(gestor, m_window, m_personaje);
+        estadoCiencia->iniciar();
+        gestor->empujarEstado(std::move(estadoCiencia));
+        return;
+    }
+
+    if(intersecta(personajeBounds, m_areaPuerta4.getGlobalBounds())) {
+        sf::sleep(sf::seconds(0.5f));
+        std::unique_ptr<MinijuegoHistoria> estadoHistoria = std::make_unique<MinijuegoHistoria>(gestor, m_window, m_personaje);
+        estadoHistoria->iniciar();
+        gestor->empujarEstado(std::move(estadoHistoria));
         return;
     }
 }

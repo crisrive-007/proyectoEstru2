@@ -13,6 +13,8 @@
 #include "MinijuegoArte.h"
 #include "BancoPreguntas.h"
 #include "MinijuegoPolitica.h"
+#include "MinijuegoCiencia.h"
+#include "MinijuegoHistoria.h"
 
 class Biblioteca : public Estado {
 private:

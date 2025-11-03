@@ -57,6 +57,8 @@
 		<Unit filename="include/GestorEstados.h" />
 		<Unit filename="include/MapaPrincipal.h" />
 		<Unit filename="include/MinijuegoArte.h" />
+		<Unit filename="include/MinijuegoCiencia.h" />
+		<Unit filename="include/MinijuegoHistoria.h" />
 		<Unit filename="include/MinijuegoPolitica.h" />
 		<Unit filename="include/Personaje.h" />
 		<Unit filename="include/Pregunta.h" />
@@ -71,6 +73,8 @@
 		<Unit filename="src/GestorEstados.cpp" />
 		<Unit filename="src/MapaPrincipal.cpp" />
 		<Unit filename="src/MinijuegoArte.cpp" />
+		<Unit filename="src/MinijuegoCiencia.cpp" />
+		<Unit filename="src/MinijuegoHistoria.cpp" />
 		<Unit filename="src/MinijuegoPolitica.cpp" />
 		<Unit filename="src/Personaje.cpp" />
 		<Unit filename="src/Pregunta.cpp" />
