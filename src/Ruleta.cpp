@@ -1,128 +1,141 @@
 #include "Ruleta.h"
-#include <iostream>
+#include <algorithm>
+#include <chrono>
 #include <random>
 
-Ruleta::Ruleta() : m_textura(), m_texturaCentro(), m_sprite(m_textura), m_spriteCentro(m_texturaCentro), m_circuloColision(), m_velocidadRotacion(0.0f) {
+Ruleta::Ruleta() : m_sprPantalla(m_texPantalla), m_txt(m_font){
+    std::random_device rd;
+    m_rng.seed(rd());
 }
 
-bool Ruleta::cargar(const std::string& rutaTexturaRuleta) {
-    if (!m_textura.loadFromFile(rutaTexturaRuleta)) {
-        std::cerr << "ERROR: No se pudo cargar textura ruleta\n";
-        return false;
-    }
+bool Ruleta::cargar(const std::string& rutaPantalla, const std::string& rutaFuente) {
+    if (!m_texPantalla.loadFromFile(rutaPantalla)) return false;
+    m_sprPantalla.setTexture(m_texPantalla, true);
+    m_sprPantalla.setOrigin({m_texPantalla.getSize().x / 2.f, m_texPantalla.getSize().y / 2.f});
 
-    m_sprite.setTexture(m_textura, true);
-    m_sprite.setScale({0.3f, 0.3f});
-    sf::Vector2u tam = m_textura.getSize();
-    m_sprite.setOrigin({tam.x / 2.f, tam.y / 2.f});
-
-    if (!m_texturaCentro.loadFromFile("assets/Spinwheel/arrow.png")) {
-        std::cerr << "ERROR: No se pudo cargar arrow.png\n";
-        return false;
-    }
-
-    m_spriteCentro.setTexture(m_texturaCentro, true);
-    m_spriteCentro.setScale({0.1f, 0.1f});
-    sf::Vector2u tamCentro = m_texturaCentro.getSize();
-    m_spriteCentro.setOrigin({tamCentro.x / 2.f, tamCentro.y / 2.f});
-    m_spriteCentro.setRotation(sf::degrees(0));
-
-    // hitbox circular
-    m_circuloColision.setFillColor(sf::Color(0,0,0,0));
-    m_circuloColision.setOutlineThickness(2.f);
-    m_circuloColision.setOutlineColor(sf::Color(255,255,255,60));
-    actualizarHitbox();
+    if (!m_font.openFromFile(rutaFuente)) return false;
+    m_txt.setFont(m_font);
+    m_txt.setCharacterSize(42);
+    m_txt.setFillColor(sf::Color::White);
+    m_txt.setOutlineThickness(2.f);
+    m_txt.setOutlineColor(sf::Color::Black);
+    m_txt.setString("—");
+    centrarTexto();
     return true;
 }
 
-void Ruleta::actualizar(float deltaTime) {
-    if (m_velocidadRotacion > 0.0f) {
-        m_sprite.rotate(sf::degrees(m_velocidadRotacion * deltaTime));
-        m_velocidadRotacion -= 100.0f * deltaTime;
-        if (m_velocidadRotacion < 0.0f) {
-            m_velocidadRotacion = 0.0f;
-        }
+void Ruleta::setOpciones(const std::vector<std::string>& opciones) {
+    m_opcionesOriginales = opciones;
+    resetearOpciones();
+}
+
+void Ruleta::resetearOpciones() {
+    m_opcionesActuales.clear();
+    for (const auto& o : m_opcionesOriginales) m_opcionesActuales.push_back(o);
+}
+
+void Ruleta::setPosition(sf::Vector2f pos) {
+    m_sprPantalla.setPosition(pos);
+    centrarTexto();
+}
+
+void Ruleta::setEscalaPantalla(sf::Vector2f scl) {
+    m_sprPantalla.setScale(scl);
+    centrarTexto();
+}
+
+void Ruleta::setColorTexto(const sf::Color& c) {
+    m_txt.setFillColor(c);
+}
+
+void Ruleta::setOutlineTexto(float grosor, const sf::Color& c) {
+    m_txt.setOutlineThickness(grosor);
+    m_txt.setOutlineColor(c);
+}
+
+void Ruleta::setTamanioTexto(unsigned tam) {
+    m_txt.setCharacterSize(tam);
+    centrarTexto();
+}
+
+void Ruleta::iniciarGiro(float durMinSeg, float durMaxSeg) {
+    if (m_opcionesActuales.empty()) resetearOpciones();
+    std::shuffle(m_opcionesActuales.begin(), m_opcionesActuales.end(), m_rng);
+
+    std::uniform_real_distribution<float> dist(durMinSeg, durMaxSeg);
+    m_duracion = dist(m_rng);
+    m_tiempoTotal = 0.f;
+    m_tickAcum = 0.f;
+    m_tickActual = m_tickRapido;
+    m_rodando = true;
+}
+
+void Ruleta::actualizar(float dt) {
+    if (!m_rodando) return;
+
+    m_tiempoTotal += dt;
+    float t = std::clamp(m_tiempoTotal / m_duracion, 0.f, 1.f);
+    m_tickActual = m_tickRapido + (m_tickLento - m_tickRapido) * easeOutCubic(t);
+
+    m_tickAcum += dt;
+    if (m_tickAcum >= m_tickActual && !m_opcionesActuales.empty()) {
+        m_tickAcum = 0.f;
+        m_txt.setString(m_opcionesActuales.front());
+        centrarTexto();
+        m_opcionesActuales.pop_front();
+    }
+
+    if (m_opcionesActuales.size() <= 1) {
+        if (!m_opcionesActuales.empty())
+            m_txt.setString(m_opcionesActuales.front());
+        centrarTexto();
+        m_rodando = false;
     }
 }
 
-void Ruleta::dibujar(sf::RenderWindow& window) const {
-    window.draw(m_sprite);
-    window.draw(m_spriteCentro);
-    window.draw(m_circuloColision);
-}
-
-void Ruleta::setPosition(float x, float y) {
-    m_sprite.setPosition(sf::Vector2f(x, y));
-    m_spriteCentro.setPosition(sf::Vector2f(x, y));
-}
-
-void Ruleta::iniciarGiro(float velocidadInicial) {
-    // Crear un generador de números aleatorios
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-
-    // Definir el rango de velocidad aleatoria (puedes ajustar estos valores)
-    std::uniform_real_distribution<float> dis(velocidadInicial * 0.8f, velocidadInicial * 1.2f);
-
-    // Asignar una velocidad aleatoria
-    m_velocidadRotacion = dis(gen);
-
-    std::cout << "Velocidad de giro aleatoria: " << m_velocidadRotacion << std::endl;
-}
-
-sf::Vector2f Ruleta::getPosition() const {
-    return m_sprite.getPosition();
-}
-
-const sf::CircleShape& Ruleta::getCirculoColision() const {
-    return m_circuloColision;
-}
-
-void Ruleta::actualizarHitbox() {
-    const auto tex = m_textura.getSize();
-    const float escalaX = m_sprite.getScale().x;
-    const float escalaY = m_sprite.getScale().y;
-    const float w = tex.x * escalaX;
-    const float h = tex.y * escalaY;
-    const float radio = 0.5f * std::max(w, h);
-    m_circuloColision.setRadius(radio);
-    m_circuloColision.setOrigin({radio, radio});
-    m_circuloColision.setPosition(m_sprite.getPosition());
-}
-
-sf::FloatRect Ruleta::getBounds() const {
-    return m_sprite.getGlobalBounds(); // usa el sprite como AABB
-}
-
-bool Ruleta::estaGirando() const {
-    return m_velocidadRotacion > 0.0f;
-}
-
-bool Ruleta::enReposo() const {
-    return m_velocidadRotacion <= 0.0f;
-}
-
-float Ruleta::getAnguloGrados() const {
-    return m_sprite.getRotation().asDegrees(); // SFML 3 devuelve Angle; .value son grados
-}
-
-int Ruleta::getIndiceResultado(int segmentos) const {
-    // 0° está arriba (flecha)
-    const float offsetDeg = 0.f; // si tu flecha apunta a otro lado, ajusta aquí (por ejemplo 90.f o -90.f)
-    float ang = std::fmod(getAnguloGrados() + 360.f + offsetDeg, 360.f);
-    float tam = 360.f / segmentos;
-
-    // Invertimos sentido para coincidir con sentido visual de la textura
-    int idx = static_cast<int>((360.f - ang) / tam) % segmentos;
-    return idx;
+void Ruleta::dibujar(sf::RenderTarget& target) const {
+    target.draw(m_sprPantalla);
+    target.draw(m_txt);
 }
 
 std::string Ruleta::getTextoResultado() const {
-    static const char* nombres[4] = {
-        "Politica",     // Sector superior izquierdo (azul)
-        "Ciencia", // Superior derecho (rojo)
-        "Historia", // Inferior izquierdo (amarillo)
-        "Arte"   // Inferior derecho (verde)
-    };
-    return nombres[getIndiceResultado(4)];
+    return m_txt.getString();
 }
+
+float Ruleta::easeOutCubic(float t) {
+    float inv = 1.f - t;
+    return 1.f - inv * inv * inv;
+}
+
+void Ruleta::centrarTexto() {
+    sf::FloatRect gb = m_txt.getLocalBounds();
+    m_txt.setOrigin({gb.size.x / 2.f, gb.size.y / 2.f});
+    m_txt.setPosition(m_sprPantalla.getPosition());
+}
+
+void Ruleta::eliminarOpcion(const std::string& texto) {
+    if (m_rodando) return; // No se permite modificar mientras gira
+
+    // --- 1️⃣ Eliminar del vector original ---
+    auto itVec = std::remove(m_opcionesOriginales.begin(), m_opcionesOriginales.end(), texto);
+    if (itVec != m_opcionesOriginales.end()) {
+        m_opcionesOriginales.erase(itVec, m_opcionesOriginales.end());
+    }
+
+    // --- 2️⃣ Eliminar también del deque actual ---
+    auto itDeque = std::remove(m_opcionesActuales.begin(), m_opcionesActuales.end(), texto);
+    if (itDeque != m_opcionesActuales.end()) {
+        m_opcionesActuales.erase(itDeque, m_opcionesActuales.end());
+    }
+
+    // --- 3️⃣ Si se eliminó el texto mostrado, mostrar la siguiente ---
+    if (m_txt.getString() == texto) {
+        if (!m_opcionesActuales.empty()) {
+            m_txt.setString(m_opcionesActuales.front());
+        } else {
+            m_txt.setString("—"); // Si ya no hay opciones
+        }
+        centrarTexto();
+    }
+}
+

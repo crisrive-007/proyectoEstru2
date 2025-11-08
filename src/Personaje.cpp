@@ -10,7 +10,7 @@ const std::string Personaje::CELEBRAR_PATH = "assets/Player/emote.png";
 const float Personaje::animSpeed = 0.1f;
 
 Personaje::Personaje(float vel, const std::unordered_set<int>& tilesValidosParam)
-    : sprite(quieto), velocidad(vel), ultima(Abajo), tilesValidos(tilesValidosParam) {
+    : sprite(quieto), velocidad(vel), ultima(Abajo), tilesValidos(tilesValidosParam), vidas(0) {
 
     cargarTodasLasTexturas();
 
@@ -541,7 +541,23 @@ void Personaje::actualizarSinTiles(float anchoVentana, float altoVentana) {
     actualizarAnimacion();
 
     // 3) recorta para que no se salga del viewport
-    limitarBordes(anchoVentana, altoVentana);
+    //limitarBordes(anchoVentana, altoVentana);
+}
+
+void Personaje::reiniciarVidas() {
+    vidas = 0;
+}
+
+void Personaje::ganarVida(int n) {
+    if (n > 0) vidas += n;
+}
+
+int Personaje::getVidas() const {
+    return vidas;
+}
+
+void Personaje::setScale(float x, float y) {
+    sprite.setScale({x,y});
 }
 
 Personaje::~Personaje()

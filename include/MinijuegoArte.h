@@ -6,42 +6,27 @@
 #include <array>
 #include <string>
 #include <vector>
+#include <cmath>
+#include <queue>
+
 #include "Estado.h"
 #include "Personaje.h"
-
-// Si ya tienes tu BancoPreguntas con esta firma, usa ese;
-// si no, dejamos un struct local de respaldo:
-struct Pregunta {
-    std::string enunciado;
-    std::array<std::string,4> opciones;
-    int correcta = 0; // 0=A, 1=B, 2=C, 3=D
-};
+#include "Pregunta.h"
 
 class MinijuegoArte : public Estado {
 public:
-    enum class EstadoCombate { Jugando, Gano, Perdio };
-    enum class Subestado {Pregunta, Feedback};
+    enum class Fase { EsperaSeleccion, Lanzamiento, Feedback, Fin };
 
-    MinijuegoArte(GestorEstados* gestor, sf::RenderWindow& window, Personaje& personaje);
+    MinijuegoArte(GestorEstados* g, sf::RenderWindow& w, Personaje& p);
+    ~MinijuegoArte() override = default;
 
-    // Ciclo de Estado (misma forma que en Biblioteca)
     void manejarEventos(sf::RenderWindow& window) override;
     void actualizar() override;
     void dibujar(sf::RenderWindow& window) override;
 
-    // Control
-    void iniciarCombate();   // resetea HUD + pone primera pregunta
-    bool terminado() const { return m_estado != EstadoCombate::Jugando; }
-
-    void startBGM();
-    void stopBGM();
-    void onWin();
-
-    void salirDelMinijuego();
-    void onLose();
+    void iniciar();
 
 private:
-    // Helpers SFML3
     static bool containsPoint(const sf::FloatRect& r, const sf::Vector2f& p) {
         const float x1 = r.position.x, y1 = r.position.y;
         const float x2 = x1 + r.size.x, y2 = y1 + r.size.y;
@@ -49,57 +34,88 @@ private:
     }
 
     void cargarAssets();
-    void armarPreguntas();        // Puedes reemplazar con BancoPreguntas
-    void mostrarPregunta(int idx);
-    void procesarRespuesta(int idxOpcion);
-    void siguientePregunta();
+    void armarPreguntas();
+    void cargarPreguntaActual();   // carga desde la cola al "m_actual"
+    void procesarSeleccion(int idxDiana); // dispara shuriken hacia idxDiana
+    void resolverImpacto();        // decide correcto/incorrecto y prepara feedback
+    void siguiente();              // pasa a la siguiente pregunta o fin
+    void terminar(const std::string& mensaje); // set Fin
+    void salirDelMinijuego();
 
-    // Referencias
+    void startAnimLanzamiento(bool loop);
+    void actualizarAnimGreninja(float dt);
+
+    // contexto
     sf::RenderWindow& m_window;
     Personaje&        m_personaje;
 
-    // Textos
-    sf::Font   m_font;
-    sf::Text   m_txtPregunta;
-    sf::Text   m_txtOpcA, m_txtOpcB, m_txtOpcC, m_txtOpcD;
+    // estado general
+    Fase  m_fase = Fase::EsperaSeleccion;
+    int   m_dianaObjetivo = -1;   // diana clickeada
+    int   m_correctas = 0;
+    int   m_fallosSeguidos = 0;
+    bool  m_ultimoCorrecto = false;
 
-    // Sprites y texturas
-    sf::Texture m_texFondo, m_texDialog, m_texPika, m_texChari;
-    sf::Sprite  m_sprFondo, m_sprDialog, m_sprPika, m_sprChari;
+    // preguntas (cola)
+    std::queue<Pregunta> m_cola;
+    Pregunta m_actual;
 
-    sf::Texture m_texBtnA, m_texBtnB, m_texBtnC, m_texBtnD;
-    sf::Sprite  m_btnA,    m_btnB,    m_btnC,    m_btnD;
+    // fuentes y textos
+    sf::Font m_font;
+    sf::Text m_txtPregunta;
+    sf::Text m_txtA, m_txtB, m_txtC, m_txtD;
+    sf::Text m_txtHUD;      // “Aciertos: x | Fallos seguidos: y”
+    sf::Text m_txtFeedback; // “¡Correcto!” / “Incorrecto…”
+    sf::Text m_txtFin;      // mensaje final
 
-    // Vida jugador (5 segmentos â†’ life5 lleno â€¦ life0 vacÃ­o)
-    std::array<sf::Texture,6> m_texLife; // 0..5
-    sf::Sprite  m_sprLife;
+    // sprites/texturas
+    sf::Texture m_texFondo, m_texDialog, m_texGreninja, m_texShuriken, m_texDiana, m_texExplosion;
+    sf::Sprite  m_sprFondo, m_sprDialog, m_sprGreninja, m_sprShuriken;
+    std::vector<sf::Sprite> m_dianas;
 
-    // Estado del combate
-    int m_vidaJugador = 5;
-    EstadoCombate m_estado = EstadoCombate::Jugando;
-    Subestado m_subestado = Subestado::Pregunta;
+    // Contador de fallos totales (para decidir win/lose al final)
+    int   m_fallosTotales = 0;
 
-    int idxSeleccion = -1;
+    // Letras sobre cada diana
+    std::vector<sf::Text> m_txtLetras;
 
-    sf::SoundBuffer m_bufBgm;
-    sf::Sound m_bgm;
 
-    sf::SoundBuffer m_bufAdvance;
-    sf::Sound m_sndAdvance;
+    std::vector<sf::IntRect> m_framesGreninja;
+    sf::Vector2i m_frameSize {120, 90}; // ancho/alto de cada frame en el sheet
+    int   m_frameIdx  = 0;
+    float m_frameTime = 0.f;
+    float m_frameDur  = 0.09f;     // 90 ms por frame
+    bool  m_animLanzando = false;  // true mientras lanza (vuelo del shuriken)
+    bool  m_animLoop     = false;
 
-    sf::SoundBuffer m_bufVictory;
-    sf::Sound m_sndVictory;
+    // posiciones y animaciones
+    std::array<sf::Vector2f,4> m_posDianas;
+    sf::Vector2f m_posGreninja;
+    sf::Vector2f m_posShuriken;
+    sf::Vector2f m_velShuriken;
+    float        m_speedShuriken = 1200.f;
+    bool         m_shurikenEnVuelo = false;
 
-    // Preguntas
-    std::vector<Pregunta> m_preguntas;
-    int m_idxPregunta = 0;
-    int m_respuestaCorrecta = 0;
+    // anim de "explosión"
+    bool   m_explota = false;
+    int    m_dianaQueExplota = -1;
+    float  m_exploTimer = 0.f;     // segundos
+    float  m_exploDur = 0.35f;     // duración
+    float  m_exploScaleMax = 1.8f; // escala máx del flash
+    sf::CircleShape m_flash;       // flash si no hay hoja de explosión
 
-    // Reloj
-    sf::Clock m_clock;
-    float m_shakePika  = 0.f;
-    float m_shakeChari = 0.f;
-    sf::Vector2f m_pikaBase, m_chariBase;
+    // audio
+    sf::SoundBuffer m_bufBgm, m_bufThrow, m_bufCorrect, m_bufWrong;
+    sf::Sound       m_bgm, m_sndThrow, m_sndCorrect, m_sndWrong;
+
+    // reloj
+    sf::Clock m_clk;
+
+    // util
+    void setTextoCentro(sf::Text& t, float x, float y) {
+        auto b = t.getGlobalBounds();
+        t.setPosition({x - b.size.x/2.f, y - b.size.y/2.f});
+    }
 };
 
 #endif

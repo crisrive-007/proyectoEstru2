@@ -42,22 +42,23 @@ public:
     void setTilesValidos(const std::unordered_set<int>& nuevosTilesValidos);
     void actualizarEnInterior();
 
+    void reiniciarVidas();       // vuelve a 0
+    void ganarVida(int n = 1);   // suma n vidas (por defecto 1)
+    int  getVidas() const;
+
     float getRadioColision();
 
     void setPosition(int x, int y);
     sf::Vector2f getPosition() const;
 
-    /*static const std::string QUIETO_PATH;
-    static const std::string CAMINAR_PATH;
-    static const std::string ATACAR_PATH;
-    static const std::string HERIDO_PATH;
-    static const std::string CELEBRAR_PATH;*/
+    void setScale(float x, float y);
 
     ~Personaje();
 
 private:
     sf::Texture quieto, caminar, atacar, herido, celebrar;
     sf::Sprite sprite;
+    int vidas = 0;
     float velocidad;
     Estado actual;
     Direccion ultima;
