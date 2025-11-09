@@ -204,7 +204,7 @@ void MinijuegoArte::cargarPreguntaActual() {
         m_bgm.stop();
 
         if (m_correctas == 5) {
-            personaje.ganarVida();
+            m_personaje.ganarVida();
             m_txtPregunta.setString("Felicidades, has acertado todas las dianas.\nHas ganado una vida extra");
         } else {
             m_txtPregunta.setString("Mala suerte, no ganas una vida extra");

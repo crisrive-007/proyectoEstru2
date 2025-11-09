@@ -43,7 +43,7 @@ public:
     void actualizarEnInterior();
 
     void reiniciarVidas();       // vuelve a 0
-    void ganarVida(int n = 1);   // suma n vidas (por defecto 1)
+    void ganarVida();   // suma n vidas (por defecto 1)
     int  getVidas() const;
 
     float getRadioColision();
@@ -52,6 +52,18 @@ public:
     sf::Vector2f getPosition() const;
 
     void setScale(float x, float y);
+    // Personaje.h
+    void aplicarSkinEmpirista();
+
+    // ======== Gestión de equipo filosófico ========
+    enum class EquipoFilosofico { Ninguno, Racionalistas, Empiristas };
+
+    void setEquipoFilosofico(EquipoFilosofico nuevoEquipo);
+    EquipoFilosofico getEquipoFilosofico() const;
+    std::string getEquipo() const;
+
+    void setNombre(std::string name);
+    std::string getNombre();
 
     ~Personaje();
 
@@ -63,6 +75,9 @@ private:
     Estado actual;
     Direccion ultima;
     float radioColision;
+    EquipoFilosofico equipo = EquipoFilosofico::Ninguno;
+    std::string nombre = "criku";
+
 
     // Tiles v�lidos ahora se recibe como par�metro
     std::unordered_set<int> tilesValidos;

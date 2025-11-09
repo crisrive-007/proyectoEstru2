@@ -446,6 +446,7 @@ void MinijuegoPolitica::manejarEventos(sf::RenderWindow& w) {
                         limpiarOpciones();
                         if (m_correctas >= 5) {
                             m_txtPregunta.setString("Felicidades has encontrado todos los fosiles.\nHas ganado una vida extra.");
+                            m_personaje.ganarVida();
                         } else {
                             m_txtPregunta.setString("Mala suerte, no ganas una vida extra");
                         }

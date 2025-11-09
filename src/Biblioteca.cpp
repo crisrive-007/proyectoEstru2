@@ -37,6 +37,12 @@ Biblioteca::Biblioteca(GestorEstados* gestor, sf::RenderWindow& window, Personaj
 , m_sprPantallaR(m_texPantallaR)
 , m_txtR(m_fontR)
 , m_msgText(m_fontR)
+, m_sprRacionalistas(m_texRacionalistas)
+, m_sprEmpiristas(m_texEmpiristas)
+, m_txtTituloEleccion(m_fontR)
+, m_txtNombreRacionalistas(m_fontR)
+, m_txtNombreEmpiristas(m_fontR)
+, m_txtNombre(m_fontR)
 {
     // RNG
     std::random_device rd; m_rng.seed(rd());
@@ -56,7 +62,7 @@ Biblioteca::Biblioteca(GestorEstados* gestor, sf::RenderWindow& window, Personaj
     cargarFondosTematicos();
 
     // Spawn jugador
-    m_personaje.setPosition(MAP_ORIG.x + MAP_SIZE.x * 0.5f, MAP_ORIG.y + MAP_SIZE.y - 60.f);
+    m_personaje.setPosition(MAP_ORIG.x + MAP_SIZE.x * 0.5f - 25.f, MAP_ORIG.y + MAP_SIZE.y - 100.f);
     m_personaje.setScale(5.f,5.f);
 
     // Colisiones base
@@ -67,8 +73,8 @@ Biblioteca::Biblioteca(GestorEstados* gestor, sf::RenderWindow& window, Personaj
 
     // === TRIGGERS estilo ejemplo ===
     // Salida general (ajusta a donde tengas la “salida”)
-    m_areaSalida.setSize({62.f, 32.f});
-    m_areaSalida.setPosition({ MAP_ORIG.x + MAP_SIZE.x * 0.5f - 31.f, MAP_ORIG.y + MAP_SIZE.y + 60.f });
+    m_areaSalida.setSize({210.f, 32.f});
+    m_areaSalida.setPosition({ MAP_ORIG.x + MAP_SIZE.x * 0.5f - 105.f, 950.f});
     m_areaSalida.setFillColor(sf::Color(255, 0, 0, 120));
 
     // Puertas: alineamos los triggers al rect de cada puerta
@@ -82,6 +88,30 @@ Biblioteca::Biblioteca(GestorEstados* gestor, sf::RenderWindow& window, Personaj
     mkDoor(m_areaPuerta2, m_puertaRect[1], sf::Color(255, 0,   0,  80));
     mkDoor(m_areaPuerta3, m_puertaRect[2], sf::Color(0,   0, 255,  80));
     mkDoor(m_areaPuerta4, m_puertaRect[3], sf::Color(255, 255, 0,  80));
+
+    // === HUD (Nombre y Vidas) ===
+    m_hudBox.setSize({250.f, 80.f});
+    m_hudBox.setPosition({MAP_ORIG.x + 10.f, MAP_ORIG.y + 10.f});
+    m_hudBox.setFillColor(sf::Color(0, 0, 0, 120));
+    m_hudBox.setOutlineColor(sf::Color::White);
+    m_hudBox.setOutlineThickness(2.f);
+
+    // Reutilizamos la misma fuente del juego (m_fontR ya está cargada)
+    m_txtNombre.setFont(m_fontR);
+    m_txtNombre.setCharacterSize(20);
+    m_txtNombre.setFillColor(sf::Color::White);
+    m_txtNombre.setOutlineColor(sf::Color::Black);
+    m_txtNombre.setOutlineThickness(2.f);
+    m_txtNombre.setPosition(m_hudBox.getPosition() + sf::Vector2f{15.f, 12.f});
+
+    // Si tu Personaje no tiene getNombre(), usa un literal o añade ese método.
+    m_txtNombre.setString(m_personaje.getNombre());
+
+    // Cargar corazón y construir corazones iniciales
+    if (!m_texCorazon.loadFromFile("assets/vidas.png")) {
+        std::cerr << "⚠ No se pudo cargar assets/UI/corazon.png\n";
+    }
+    actualizarHUD();
 
     // Cámara simple
     ejecutarMapa();
@@ -97,6 +127,22 @@ void Biblioteca::ejecutarMapa() {
 // ====== Eventos ======
 void Biblioteca::manejarEventos(sf::RenderWindow& window) {
     while (auto ev = window.pollEvent()) {
+        // ——— Captura exclusiva mientras la elección está activa ———
+        if (m_eleccionActiva) {
+            if (auto* m = ev->getIf<sf::Event::MouseMoved>()) {
+                sf::Vector2f worldPos = window.mapPixelToCoords({ m->position.x, m->position.y });
+                actualizarHoverEleccion(worldPos);
+            }
+            if (auto* m = ev->getIf<sf::Event::MouseButtonPressed>()) {
+                if (m->button == sf::Mouse::Button::Left) {
+                    // Posición de clic en coords de ventana → a coords "mundo" (usamos la view por defecto)
+                    sf::Vector2f worldPos = window.mapPixelToCoords({ m->position.x, m->position.y });
+                    manejarClickEleccion(worldPos);
+                }
+            }
+            // Consumimos eventos mientras la ventana de elección está activa (no dejamos girar ruleta, etc.)
+            continue;
+        }
         if (ev->is<sf::Event::Closed>()) { window.close(); return; }
         if (auto* k = ev->getIf<sf::Event::KeyPressed>()) {
             if (k->code == sf::Keyboard::Key::F3) m_debugColisiones = !m_debugColisiones;
@@ -144,8 +190,12 @@ void Biblioteca::actualizar() {
     // Triggers estilo ejemplo (salida + puertas con locks)
     interaccionPuertas();
 
+    verificarFinMinijuegos();
+
     // Ruleta
     if (m_ruletaActiva) actualizarRuleta(dt);
+
+    actualizarHUD();
 }
 
 // ====== Draw ======
@@ -167,6 +217,16 @@ void Biblioteca::dibujar(sf::RenderWindow& window) {
     if (m_ruletaActiva) dibujarRuleta(window);
 
     m_personaje.dibujar(window);
+
+    if (m_eleccionActiva) {
+        dibujarEleccion(window);
+    }
+
+    // === Dibujar HUD ===
+    window.draw(m_hudBox);
+    window.draw(m_txtNombre);
+    for (auto& c : m_corazones) window.draw(c);
+
 }
 
 // ======================== COLISIONES MAPA (base) ========================
@@ -634,4 +694,226 @@ void Biblioteca::interaccionPuertas() {
     if (tryDoor(1, r2)) return;
     if (tryDoor(2, r3)) return;
     if (tryDoor(3, r4)) return;
+}
+
+void Biblioteca::verificarFinMinijuegos() {
+    // Cuando ya no quedan opciones en la ruleta, lanzamos la elección (si no se mostró aún)
+    if (!m_eleccionActiva && m_equipoElegido == -1 && m_opcionesR.empty()) {
+        iniciarEleccionEquipo();
+    }
+}
+
+void Biblioteca::iniciarEleccionEquipo() {
+    m_eleccionActiva = true;
+
+    // Overlay oscuro
+    m_overlayEleccion.setSize({ MAP_SIZE.x, MAP_SIZE.y });
+    m_overlayEleccion.setPosition(MAP_ORIG);
+    m_overlayEleccion.setFillColor(sf::Color(0, 0, 0, 140));
+
+    // Título
+    m_txtTituloEleccion.setFont(m_fontR);            // ya cargada en setupRuleta()
+    m_txtTituloEleccion.setString("Elige tu escuela:");
+    m_txtTituloEleccion.setCharacterSize(28);
+    m_txtTituloEleccion.setFillColor(sf::Color::White);
+    m_txtTituloEleccion.setOutlineColor(sf::Color::Black);
+    m_txtTituloEleccion.setOutlineThickness(3.f);
+    auto tb = m_txtTituloEleccion.getGlobalBounds();
+    m_txtTituloEleccion.setOrigin({ tb.size.x/2.f, tb.size.y/2.f });
+    m_txtTituloEleccion.setPosition({ MAP_ORIG.x + MAP_SIZE.x*0.5f, MAP_ORIG.y + 140.f });
+
+    // Carga de sprites (pon tus rutas reales)
+    // Ejemplo de rutas (cámbialas si usas otras):
+    if (!m_texRacionalistas.loadFromFile("assets/racionalistas.png")) {
+        std::cout << "No se pudo cargar racionalistas.png" << std::endl;
+    }
+    if (!m_texEmpiristas.loadFromFile("assets/empiristas.png")) {
+        std::cout << "No se pudo cargar empiristas.png" << std::endl;
+    }
+
+    m_sprRacionalistas.setTexture(m_texRacionalistas, true);
+    m_sprEmpiristas.setTexture(m_texEmpiristas, true);
+
+    // Escalado objetivo por altura
+    auto texR = m_texRacionalistas.getSize();
+    auto texE = m_texEmpiristas.getSize();
+    float scaleR = 240.f / std::max(1u, texR.y);
+    float scaleE = 240.f / std::max(1u, texE.y);
+    m_sprRacionalistas.setScale({ scaleR, scaleR });
+    m_sprEmpiristas.setScale({ scaleE, scaleE });
+
+    // Posiciones: izquierda/derecha del centro
+    sf::Vector2f centro { MAP_ORIG.x + MAP_SIZE.x*0.5f, MAP_ORIG.y + MAP_SIZE.y*0.5f + 40.f };
+    m_sprRacionalistas.setPosition({ centro.x - 260.f - (m_sprRacionalistas.getGlobalBounds().size.x*0.5f), centro.y - (m_sprRacionalistas.getGlobalBounds().size.y*0.5f) });
+    m_sprEmpiristas.setPosition({  centro.x + 260.f - (m_sprEmpiristas.getGlobalBounds().size.x*0.5f),     centro.y - (m_sprEmpiristas.getGlobalBounds().size.y*0.5f) });
+
+    // ===== Bases de estandartes =====
+    // Centro base = centro geométrico actual (tras tu pos+escala inicial)
+    {
+        auto gR = m_sprRacionalistas.getGlobalBounds();
+        auto gE = m_sprEmpiristas.getGlobalBounds();
+        m_baseCenterR = { gR.position.x + gR.size.x*0.5f, gR.position.y + gR.size.y*0.5f };
+        m_baseCenterE = { gE.position.x + gE.size.x*0.5f, gE.position.y + gE.size.y*0.5f };
+        m_baseScaleR  = m_sprRacionalistas.getScale();
+        m_baseScaleE  = m_sprEmpiristas.getScale();
+    }
+
+    // (Opcional) actualiza los hit dinámicamente igual, pero ya no dependemos de ellos
+    m_hitRacionalistas = m_sprRacionalistas.getGlobalBounds();
+    m_hitEmpiristas    = m_sprEmpiristas.getGlobalBounds();
+
+    // Textos de nombres encima de cada logo
+    // Textos nombres (se crean igual que ya los tenías)
+    m_txtNombreRacionalistas.setFont(m_fontR);
+    m_txtNombreEmpiristas.setFont(m_fontR);
+    m_txtNombreRacionalistas.setString("Racionalistas");
+    m_txtNombreEmpiristas.setString("Empiristas");
+    m_txtNombreRacionalistas.setCharacterSize(24);
+    m_txtNombreEmpiristas.setCharacterSize(24);
+    m_txtNombreRacionalistas.setFillColor(sf::Color(80, 200, 255));
+    m_txtNombreEmpiristas.setFillColor(sf::Color(255, 200, 80));
+    m_txtNombreRacionalistas.setOutlineColor(sf::Color::Black);
+    m_txtNombreEmpiristas.setOutlineColor(sf::Color::Black);
+    m_txtNombreRacionalistas.setOutlineThickness(2.f);
+    m_txtNombreEmpiristas.setOutlineThickness(2.f);
+
+    // Centramos los nombres respecto a la posición INICIAL del sprite (base) y guardamos esa posición
+    auto gR = m_sprRacionalistas.getGlobalBounds();
+    auto gE = m_sprEmpiristas.getGlobalBounds();
+    auto nR = m_txtNombreRacionalistas.getGlobalBounds();
+    auto nE = m_txtNombreEmpiristas.getGlobalBounds();
+
+    // Calcula posición fija (encima del logo base)
+    m_namePosR = {
+        gR.position.x + gR.size.x * 0.5f - nR.size.x * 0.5f,
+        gR.position.y - 40.f - nR.size.y * 0.5f
+    };
+    m_namePosE = {
+        gE.position.x + gE.size.x * 0.5f - nE.size.x * 0.5f,
+        gE.position.y - 40.f - nE.size.y * 0.5f
+    };
+
+    // Asigna una única vez
+    m_txtNombreRacionalistas.setPosition(m_namePosR);
+    m_txtNombreEmpiristas.setPosition(m_namePosE);
+
+    // ===== Bases de estandartes (para hover anclado) =====
+    m_baseCenterR = { gR.position.x + gR.size.x*0.5f, gR.position.y + gR.size.y*0.5f };
+    m_baseCenterE = { gE.position.x + gE.size.x*0.5f, gE.position.y + gE.size.y*0.5f };
+    m_baseScaleR  = m_sprRacionalistas.getScale();
+    m_baseScaleE  = m_sprEmpiristas.getScale();
+}
+
+void Biblioteca::dibujarEleccion(sf::RenderTarget& target) {
+    target.draw(m_overlayEleccion);
+    target.draw(m_txtTituloEleccion);
+    target.draw(m_sprRacionalistas);
+    target.draw(m_sprEmpiristas);
+    target.draw(m_txtNombreRacionalistas);
+    target.draw(m_txtNombreEmpiristas);
+
+    // (opcional debug) mostrar rects clicables
+    if (m_debugColisiones) {
+        auto drawRect = [&](const sf::FloatRect& r){
+            sf::RectangleShape sh;
+            sh.setPosition(r.position);
+            sh.setSize(r.size);
+            sh.setFillColor(sf::Color(0,0,0,0));
+            sh.setOutlineColor(sf::Color::Green);
+            sh.setOutlineThickness(2.f);
+            target.draw(sh);
+        };
+        // drawRect(m_hitRacionalistas);
+        // drawRect(m_hitEmpiristas);
+    }
+}
+
+void Biblioteca::manejarClickEleccion(const sf::Vector2f& worldPos) {
+    if (!m_eleccionActiva) return;
+
+    if (m_sprRacionalistas.getGlobalBounds().contains(worldPos)) {
+        m_equipoElegido  = 0;
+        m_eleccionActiva = false;
+        m_personaje.setEquipoFilosofico(Personaje::EquipoFilosofico::Racionalistas);
+        mostrarMensaje("Te uniste a los Racionalistas.", 1.6f);
+        return;
+    }
+    if (m_sprEmpiristas.getGlobalBounds().contains(worldPos)) {
+        m_equipoElegido  = 1;
+        m_eleccionActiva = false;
+        m_personaje.aplicarSkinEmpirista();
+        m_personaje.setEquipoFilosofico(Personaje::EquipoFilosofico::Empiristas);
+        mostrarMensaje("Te uniste a los Empiristas.", 1.6f);
+        return;
+    }
+}
+
+static inline sf::Vector2f centerOf(const sf::FloatRect& r) {
+    return { r.position.x + r.size.x*0.5f, r.position.y + r.size.y*0.5f };
+}
+
+static inline void placeNameAbove(const sf::Sprite& spr, sf::Text& txt, float offsetY = 40.f) {
+    auto gS = spr.getGlobalBounds();
+    auto gT = txt.getGlobalBounds();
+    // Centrado horizontal, un poco arriba (offsetY)
+    txt.setPosition({
+        gS.position.x + gS.size.x*0.5f - gT.size.x*0.5f,
+        gS.position.y - offsetY - gT.size.y*0.5f
+    });
+}
+
+void Biblioteca::actualizarHoverEleccion(const sf::Vector2f& worldPos) {
+    auto gR = m_sprRacionalistas.getGlobalBounds();
+    auto gE = m_sprEmpiristas.getGlobalBounds();
+
+    bool overR = gR.contains(worldPos);
+    bool overE = gE.contains(worldPos);
+
+    if (overR != m_hoverRacionalistas) {
+        m_hoverRacionalistas = overR;
+
+        // Escala objetivo = base * factor; recentra al MISMO centro base
+        sf::Vector2f targetScale = m_baseScaleR * (overR ? m_hoverFactor : 1.f);
+        m_sprRacionalistas.setScale(targetScale);
+        auto ng = m_sprRacionalistas.getGlobalBounds();
+        m_sprRacionalistas.setPosition({
+            m_baseCenterR.x - ng.size.x * 0.5f,
+            m_baseCenterR.y - ng.size.y * 0.5f
+        });
+
+        // NO mover m_txtNombreRacionalistas (permanece en m_namePosR)
+        // Si quieres asegurar, re-asigna la misma posición fija:
+        m_txtNombreRacionalistas.setPosition(m_namePosR);
+    }
+
+    if (overE != m_hoverEmpiristas) {
+        m_hoverEmpiristas = overE;
+
+        sf::Vector2f targetScale = m_baseScaleE * (overE ? m_hoverFactor : 1.f);
+        m_sprEmpiristas.setScale(targetScale);
+        auto ng = m_sprEmpiristas.getGlobalBounds();
+        m_sprEmpiristas.setPosition({
+            m_baseCenterE.x - ng.size.x * 0.5f,
+            m_baseCenterE.y - ng.size.y * 0.5f
+        });
+
+        // NO mover m_txtNombreEmpiristas
+        m_txtNombreEmpiristas.setPosition(m_namePosE);
+    }
+}
+
+void Biblioteca::actualizarHUD() {
+    int vidas = m_personaje.getVidas();
+    if (vidas == m_vidasCache) return; // nada que hacer
+
+    m_vidasCache = vidas;
+    m_corazones.clear();
+
+    const sf::Vector2f base = m_hudBox.getPosition() + sf::Vector2f{15.f, 42.f};
+    for (int i = 0; i < vidas; ++i) {
+        sf::Sprite c(m_texCorazon);
+        c.setScale({0.1f, 0.1f});
+        c.setPosition(base + sf::Vector2f{ i * 35.f, 0.f });
+        m_corazones.push_back(c);
+    }
 }

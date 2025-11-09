@@ -203,7 +203,6 @@ void MinijuegoHistoria::siguientePregunta() {
         if (m_bayasComidas == m_total) {
             m_txtPregunta.setString("Felicidades Snorlax esta satisfecho.\nHas ganado una vida extra.");
             m_personaje.ganarVida();
-            // m_sndVictory.play(); // si quieres
         } else {
             m_txtPregunta.setString("Mala suerte, no ganas una vida extra");
         }

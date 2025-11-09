@@ -548,8 +548,8 @@ void Personaje::reiniciarVidas() {
     vidas = 0;
 }
 
-void Personaje::ganarVida(int n) {
-    if (n > 0) vidas += n;
+void Personaje::ganarVida() {
+    vidas++;
 }
 
 int Personaje::getVidas() const {
@@ -563,4 +563,70 @@ void Personaje::setScale(float x, float y) {
 Personaje::~Personaje()
 {
     //dtor
+}
+
+void Personaje::aplicarSkinEmpirista() {
+    sf::Texture nuevoIdle;
+    sf::Texture nuevoRun;
+
+    // Maneja el nodiscard de SFML 3
+    if (!nuevoIdle.loadFromFile("assets/Player/idle_white.png")) {
+        //std::cerr << "Empiristas: no se pudo cargar idleSheet: " << idleSheet << std::endl;
+        return;
+    }
+    if (!nuevoRun.loadFromFile("assets/Player/run_white.png")) {
+        //std::cerr << "Empiristas: no se pudo cargar runSheet: " << runSheet << std::endl;
+        return;
+    }
+
+    // Sustituimos texturas base
+    quieto  = std::move(nuevoIdle);
+    caminar = std::move(nuevoRun);
+
+    // Reaplicar la textura actual según el estado
+    switch (actual) {
+        case Quieto:  sprite.setTexture(quieto,  true); break;
+        case Caminar: sprite.setTexture(caminar,true); break;
+        default:      sprite.setTexture(quieto,  true); break;
+    }
+
+    // Mantener el mismo frame 64x64 y fila por dirección
+    sprite.setTextureRect(currentFrame);
+}
+
+void Personaje::setEquipoFilosofico(EquipoFilosofico nuevoEquipo) {
+    equipo = nuevoEquipo;
+
+    switch (nuevoEquipo) {
+        case EquipoFilosofico::Racionalistas:
+            // Restaurar skin por defecto
+            cargarTodasLasTexturas();
+            std::cout << "Personaje unido a los Racionalistas.\n";
+            break;
+
+        case EquipoFilosofico::Empiristas:
+            // Aplicar el skin blanco
+            std::cout << "Personaje unido a los Empiristas.\n";
+            break;
+
+        default:
+            break;
+    }
+}
+
+Personaje::EquipoFilosofico Personaje::getEquipoFilosofico() const {
+    return equipo;
+}
+
+void Personaje::setNombre(std::string name) {
+    nombre = name;
+}
+
+std::string Personaje::getNombre() {
+    return nombre;
+}
+
+std::string Personaje::getEquipo() const {
+    if(equipo == EquipoFilosofico::Empiristas) {return "Empirista";}
+    if(equipo == EquipoFilosofico::Racionalistas) {return "Racionalista";}
 }

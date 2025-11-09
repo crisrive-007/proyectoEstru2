@@ -7,6 +7,7 @@
 #include "TileMap.h"
 #include "Personaje.h"
 #include "Biblioteca.h"
+#include "Gimnasio.h"
 #include "Estado.h"
 
 class MapaPrincipal : public Estado {
@@ -30,6 +31,8 @@ public:
     unsigned int getAncho() const { return m_ancho; }
     unsigned int getAlto() const { return m_alto; }
 
+    void actualizarHUD();
+
 private:
     sf::RenderWindow& m_window;
     Personaje& m_personaje; // Referencia al personaje del main
@@ -41,6 +44,12 @@ private:
     TileMap m_tilemapBase;
     TileMap m_tilemapObjetos;
     sf::RectangleShape m_cuadradoBiblioteca;
+    sf::RectangleShape m_cuadradoCombate;
+    sf::RectangleShape m_hudBox;
+    sf::Font m_fontHUD;
+    sf::Text m_txtNombre;
+    sf::Texture m_texCorazon;
+    std::vector<sf::Sprite> m_corazones;
 };
 
 #endif // MAPAPRINCIPAL_H

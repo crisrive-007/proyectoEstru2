@@ -140,6 +140,54 @@ private:
     // Lógica copia-del-ejemplo
     void interaccionPuertas();
     void interaccionRuleta(); // si lo quieres usar por proximidad (opcional)
+
+    // --- al final de la sección private: (añade esto) ---
+
+    // ===== Elección de equipo (Racionalistas vs Empiristas) =====
+    void verificarFinMinijuegos();           // llamada en actualizar()
+    void iniciarEleccionEquipo();            // prepara sprites/UX
+    void dibujarEleccion(sf::RenderTarget&); // overlay + sprites
+    void manejarClickEleccion(const sf::Vector2f& worldPos);
+
+    bool         m_eleccionActiva = false;
+    int          m_equipoElegido  = -1;      // -1 = sin elegir, 0 = racionalistas, 1 = empiristas
+
+    sf::Texture  m_texRacionalistas;
+    sf::Texture  m_texEmpiristas;
+    sf::Sprite   m_sprRacionalistas;
+    sf::Sprite   m_sprEmpiristas;
+
+    sf::RectangleShape m_overlayEleccion;    // fondo semitransparente
+    sf::Text     m_txtTituloEleccion;
+
+    sf::FloatRect m_hitRacionalistas;        // bounds clickables
+    sf::FloatRect m_hitEmpiristas;
+
+    sf::Text m_txtNombreRacionalistas;
+    sf::Text m_txtNombreEmpiristas;
+
+    // Hover y escalado dinámico
+    bool m_hoverRacionalistas = false;
+    bool m_hoverEmpiristas    = false;
+
+    void actualizarHoverEleccion(const sf::Vector2f& worldPos);
+
+    // Bases de estandartes (para que el hover respete lo inicializado)
+    sf::Vector2f m_baseCenterR{}, m_baseCenterE{};
+    sf::Vector2f m_baseScaleR{1.f,1.f}, m_baseScaleE{1.f,1.f};
+    float        m_hoverFactor = 1.1f;
+
+    // Posiciones fijas de los nombres (no cambian con el hover)
+    sf::Vector2f m_namePosR{}, m_namePosE{};
+
+    sf::RectangleShape m_hudBox;
+    sf::Text           m_txtNombre;
+    sf::Texture        m_texCorazon;
+    std::vector<sf::Sprite> m_corazones;
+    int m_vidasCache = -1;
+
+    // Rebuild rápido cuando cambien las vidas
+    void actualizarHUD();
 };
 
 #endif

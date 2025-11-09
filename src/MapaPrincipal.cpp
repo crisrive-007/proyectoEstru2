@@ -15,13 +15,49 @@ MapaPrincipal::MapaPrincipal(GestorEstados* gestor, sf::RenderWindow& window, Pe
       m_ancho(120),
       m_alto(67),
       m_tilemapBase(),
-      m_tilemapObjetos() {
+      m_tilemapObjetos(),
+      m_txtNombre(m_fontHUD) {
 
     m_cuadradoBiblioteca.setSize(sf::Vector2f(32, 32)); // Tamaño 2x2 tiles (16x16 cada uno)
     m_cuadradoBiblioteca.setPosition({930, 290}); // Posición en el mapa donde quieras el trigger
     m_cuadradoBiblioteca.setFillColor(sf::Color(0, 0, 0, 0)); // Rojo semitransparente para debug
 
+    m_cuadradoCombate.setSize(sf::Vector2f(32, 32));
+    m_cuadradoCombate.setPosition({600.f, 610.f}); // posición ejemplo, ajústala a donde quieras el trigger
+    m_cuadradoCombate.setFillColor(sf::Color(255, 0, 0, 80));
+
     inicializarDatosMapa();
+
+        // === HUD (Nombre y Vidas) ===
+    m_hudBox.setSize({250.f, 80.f});
+    m_hudBox.setPosition({10.f, 10.f});
+    m_hudBox.setFillColor(sf::Color(0, 0, 0, 120));
+    m_hudBox.setOutlineColor(sf::Color::White);
+    m_hudBox.setOutlineThickness(2.f);
+
+    // Fuente para el nombre
+    if (!m_fontHUD.openFromFile("assets/Pokemon_GB.ttf")) {
+        std::cerr << "Error al cargar fuente del HUD\n";
+    }
+
+    m_txtNombre.setFont(m_fontHUD);
+    m_txtNombre.setCharacterSize(20);
+    m_txtNombre.setFillColor(sf::Color::White);
+    m_txtNombre.setPosition({25.f, 20.f});
+    m_txtNombre.setString(m_personaje.getNombre()); // <-- asegúrate que Personaje tenga getNombre()
+
+    // Cargar textura del corazón
+    if (!m_texCorazon.loadFromFile("assets/vidas.png")) {
+        std::cerr << "Error al cargar textura del corazón\n";
+    }
+
+    int vidas = m_personaje.getVidas(); // <-- asegúrate que exista este método
+    for (int i = 0; i < vidas; ++i) {
+        sf::Sprite corazon(m_texCorazon);
+        corazon.setScale({1.5f, 1.5f});
+        corazon.setPosition({25.f + i * 35.f, 45.f});
+        m_corazones.push_back(corazon);
+    }
 }
 
 void MapaPrincipal::inicializarDatosMapa() {
@@ -129,13 +165,13 @@ void MapaPrincipal::inicializarDatosMapa() {
           0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
           0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
           0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-          0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-          0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-          0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-          0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-          0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-          0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-          0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+          0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,   0,3491,3496,3496,3492,3493,3494,3495,3496,3496,3497,3498,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+          0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,   0,3551,3556,3556,3552,3553,3554,3555,3556,3556,3557,3558,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+          0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,   0,3551,3556,3556,3552,3553,3554,3555,3556,3556,3557,3558,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+          0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,   0,3551,3556,3556,3552,3553,3554,3555,3556,3556,3557,3558,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+          0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,   0,3611,3616,3616,3612,3613,3614,3615,3616,3616,3617,3618,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+          0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,3670,3671,3676,3676,3672,3673,3674,3675,3676,3676,3677,3678,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+          0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,3730,3731,3736,3736,3732,3733,3734,3735,3736,3736,3737,3738,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
           0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
           0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
           0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
@@ -206,29 +242,42 @@ void MapaPrincipal::actualizar() {
     m_personaje.setTilesValidos(m_tilesValidos);
 
     sf::FloatRect personajeBounds = m_personaje.obtenerHitbox();
-    // 2. Obtener la caja de colisión (AABB) del área de activación.
-    sf::FloatRect triggerArea = m_cuadradoBiblioteca.getGlobalBounds();
 
-    // 3. 🎯 SOLUCIÓN FINAL VERIFICANDO ACCESO A PROPIEDADES (SFML 3.0+):
-    // Usamos .position.x, .size.x, etc.
-    bool colision = (personajeBounds.position.x < triggerArea.position.x + triggerArea.size.x) &&
-                    (personajeBounds.position.x + personajeBounds.size.x > triggerArea.position.x) &&
-                    (personajeBounds.position.y < triggerArea.position.y + triggerArea.size.y) &&
-                    (personajeBounds.position.y + personajeBounds.size.y > triggerArea.position.y);
+    // --- Trigger Biblioteca (ya existente) ---
+    {
+        sf::FloatRect triggerArea = m_cuadradoBiblioteca.getGlobalBounds();
+        bool colision = (personajeBounds.position.x < triggerArea.position.x + triggerArea.size.x) &&
+                        (personajeBounds.position.x + personajeBounds.size.x > triggerArea.position.x) &&
+                        (personajeBounds.position.y < triggerArea.position.y + triggerArea.size.y) &&
+                        (personajeBounds.position.y + personajeBounds.size.y > triggerArea.position.y);
 
-    if (colision) {
-        std::cout << "📚 Entrando a la biblioteca..." << std::endl;
-
-        // Crear el nuevo estado Biblioteca
-        std::unique_ptr<Biblioteca> estadoBiblioteca = std::make_unique<Biblioteca>(gestor, m_window, m_personaje);
-
-        estadoBiblioteca->ejecutarMapa();
-
-        // Empujar la biblioteca al gestor de estados
-        gestor->empujarEstado(std::move(estadoBiblioteca));
-
-        return;
+        if (colision) {
+            std::unique_ptr<Biblioteca> estadoBiblioteca = std::make_unique<Biblioteca>(gestor, m_window, m_personaje);
+            estadoBiblioteca->ejecutarMapa();
+            gestor->empujarEstado(std::move(estadoBiblioteca));
+            return;
+        }
     }
+
+    // --- Trigger Combate (nuevo) ---
+    {
+        sf::FloatRect triggerArea2 = m_cuadradoCombate.getGlobalBounds();
+        bool colision2 = (personajeBounds.position.x < triggerArea2.position.x + triggerArea2.size.x) &&
+                         (personajeBounds.position.x + personajeBounds.size.x > triggerArea2.position.x) &&
+                         (personajeBounds.position.y < triggerArea2.position.y + triggerArea2.size.y) &&
+                         (personajeBounds.position.y + personajeBounds.size.y > triggerArea2.position.y);
+
+        if (colision2) {
+            // Por ahora entra al mismo "combate" que lanzas desde la biblioteca.
+            // Si quieres que apunte a otro estado (p.ej. MinijuegoArte), me dices y lo cambiamos.
+            std::unique_ptr<Gimnasio> estadoGimnasio = std::make_unique<Gimnasio>(gestor, m_window, m_personaje);
+            estadoGimnasio->ejecutarMapa();
+            gestor->empujarEstado(std::move(estadoGimnasio));
+            return;
+        }
+    }
+
+    actualizarHUD();
 }
 
 void MapaPrincipal::manejarEventos(sf::RenderWindow& window) {
@@ -244,8 +293,26 @@ void MapaPrincipal::dibujar(sf::RenderWindow& window) {
     window.draw(m_tilemapBase);
     window.draw(m_tilemapObjetos);
     window.draw(m_cuadradoBiblioteca);
+    window.draw(m_cuadradoCombate);
 
     m_personaje.dibujar(window);
+
+        // Dibujar HUD
+    window.draw(m_hudBox);
+    window.draw(m_txtNombre);
+    for (auto& c : m_corazones)
+        window.draw(c);
+}
+
+void MapaPrincipal::actualizarHUD() {
+    m_corazones.clear();
+    int vidas = m_personaje.getVidas();
+    for (int i = 0; i < vidas; ++i) {
+        sf::Sprite corazon(m_texCorazon);
+        corazon.setScale({0.1f, 0.1f});
+        corazon.setPosition({25.f + i * 35.f, 45.f});
+        m_corazones.push_back(corazon);
+    }
 }
 
 MapaPrincipal::~MapaPrincipal() {
