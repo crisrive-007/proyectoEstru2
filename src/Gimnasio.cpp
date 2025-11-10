@@ -2,6 +2,19 @@
 #include <iostream>
 #include <algorithm>
 
+static inline sf::FloatRect FR(const sf::Vector2f& pos, const sf::Vector2f& sz) {
+    return sf::FloatRect(pos, sz);
+}
+
+bool Gimnasio::intersecta(const sf::FloatRect& A, const sf::FloatRect& B) {
+    const float ax1 = A.position.x, ay1 = A.position.y;
+    const float ax2 = ax1 + A.size.x, ay2 = ay1 + A.size.y;
+    const float bx1 = B.position.x, by1 = B.position.y;
+    const float bx2 = bx1 + B.size.x, by2 = by1 + B.size.y;
+    return (ax1 < bx2) && (ax2 > bx1) && (ay1 < by2) && (ay2 > by1);
+}
+
+
 Gimnasio::Gimnasio(GestorEstados* gestor, sf::RenderWindow& window, Personaje& personaje)
 : Estado(gestor, personaje)
 , m_window(window)
@@ -67,6 +80,13 @@ Gimnasio::Gimnasio(GestorEstados* gestor, sf::RenderWindow& window, Personaje& p
     m_txtDialogo.setOutlineColor(sf::Color::Black);
     m_txtDialogo.setOutlineThickness(2.f);
 
+    m_areaSalida.setSize({210.f, 32.f});
+    m_areaSalida.setPosition({ MAP_ORIG.x + MAP_SIZE.x * 0.5f - 105.f, MAP_ORIG.y + MAP_SIZE.y + 0.f });
+    m_areaSalida.setFillColor(sf::Color(255, 0, 0, 120));
+
+    // Colisiones del Gimnasio
+    cargarColisionesMapa();
+
     ejecutarMapa();
 }
 
@@ -114,20 +134,25 @@ void Gimnasio::manejarEventos(sf::RenderWindow& window) {
 
 void Gimnasio::actualizar() {
     // Guarda posición previa
-    const sf::Vector2f prevPos = m_personaje.getPosition();
+    m_prevPosJugador = m_personaje.getPosition();
 
-    // Movimiento libre (tu input) sin tiles
+    // Movimiento libre (input)
     m_personaje.actualizarSinTiles(MAP_SIZE.x, MAP_SIZE.y);
 
     // Clamp al área del mapa
-    sf::Vector2f pos = m_personaje.getPosition();
-    const sf::FloatRect hb = m_personaje.obtenerHitbox();
-    const float minX = MAP_ORIG.x, minY = MAP_ORIG.y;
-    const float maxX = MAP_ORIG.x + MAP_SIZE.x - hb.size.x;
-    const float maxY = MAP_ORIG.y + MAP_SIZE.y - hb.size.y;
-    pos.x = std::clamp(pos.x, minX, maxX);
-    pos.y = std::clamp(pos.y, minY, maxY);
-    m_personaje.setPosition(pos.x, pos.y);
+    {
+        sf::Vector2f pos = m_personaje.getPosition();
+        const sf::FloatRect hb = m_personaje.obtenerHitbox();
+        const float minX = MAP_ORIG.x, minY = MAP_ORIG.y;
+        const float maxX = MAP_ORIG.x + MAP_SIZE.x - hb.size.x;
+        const float maxY = MAP_ORIG.y + MAP_SIZE.y - hb.size.y;
+        pos.x = std::clamp(pos.x, minX, maxX);
+        pos.y = std::clamp(pos.y, minY, maxY);
+        m_personaje.setPosition(pos.x, pos.y);
+    }
+
+    // Aplica colisiones del mapa (rebota a pos previa si choca)
+    aplicarColisiones();
 
     // === COLISIÓN CON NPC ===
     // Construye obstáculos (1 rect)
@@ -166,6 +191,15 @@ void Gimnasio::actualizar() {
         }
     }
 
+    // === Detección de salida ===
+    sf::FloatRect playerBox = m_personaje.obtenerHitbox();
+    if (intersecta(playerBox, m_areaSalida.getGlobalBounds())) {
+        std::cout << "🚪 Saliendo del gimnasio.\n";
+        gestor->sacarEstado(); // vuelve al mapa anterior
+        m_personaje.setPosition(585.f, 625.f); // posición fuera del gimnasio
+        return;
+    }
+
     // HUD (si cambian vidas)
     actualizarHUD();
 }
@@ -176,6 +210,11 @@ void Gimnasio::dibujar(sf::RenderWindow& window) {
 
     if (m_npc.hasTexture) window.draw(m_npc.spr);
     else                  window.draw(m_npc.fallback);
+
+    // Debug colisiones
+    if (m_debugColisiones) {
+        for (const auto& r : m_dbgColisiones) window.draw(r);
+    }
 
     // Personaje
     m_personaje.dibujar(window);
@@ -189,6 +228,11 @@ void Gimnasio::dibujar(sf::RenderWindow& window) {
     if (m_dialogoActivo) {
         window.draw(m_boxDialogo);
         window.draw(m_txtDialogo);
+    }
+
+    if (m_debugColisiones) {
+        for (const auto& r : m_dbgColisiones) window.draw(r);
+        window.draw(m_areaSalida); // <-- muestra la zona de salida
     }
 }
 
@@ -309,6 +353,71 @@ std::vector<sf::FloatRect> Gimnasio::buildNpcObstacles() const {
         out.push_back(gb);
     }
     return out;
+}
+
+void Gimnasio::cargarColisionesMapa() {
+    m_colisiones.clear();
+    m_dbgColisiones.clear();
+
+    auto W = [&](float x, float y, float w, float h) -> sf::FloatRect {
+        return sf::FloatRect({MAP_ORIG.x + x, MAP_ORIG.y + y}, {w, h});
+    };
+    auto push = [&](const sf::FloatRect& r, sf::Color fill = sf::Color(0,255,255,60)) {
+        m_colisiones.push_back(r);
+        sf::RectangleShape s;
+        s.setPosition(r.position);
+        s.setSize(r.size);
+        s.setFillColor(fill);
+        s.setOutlineColor(sf::Color(0,120,255,200));
+        s.setOutlineThickness(1.5f);
+        m_dbgColisiones.push_back(s);
+    };
+
+    // ======= Barras de colisión principales =======
+
+    // 🔵 BARRA SUPERIOR más gruesa
+    const float WALL_TOP_H = 230.f;  // antes 140
+    push(W(0.f, 0.f, MAP_SIZE.x, WALL_TOP_H));
+
+    // 🔵 Esquinas superiores (ligeramente más altas)
+    const float CORNER_W = 120.f, CORNER_H = 230.f;  // antes 260
+    push(W(0.f, 0.f, CORNER_W, CORNER_H));
+    push(W(MAP_SIZE.x - CORNER_W, 0.f, CORNER_W, CORNER_H));
+
+    // 🔵 Laterales
+    const float SIDE_W = 30.f;
+    push(W(0.f,               40.f, SIDE_W,           MAP_SIZE.y - 80.f));
+    push(W(MAP_SIZE.x-SIDE_W, 40.f, SIDE_W,           MAP_SIZE.y - 80.f));
+
+    // 🔵 BARRAS INFERIORES más grandes (con hueco central para entrada)
+    const float BASE_H = 105.f;  // antes 24
+    const float puertaAncho = 230.f;
+    const float puertaXc = MAP_SIZE.x * 0.5f;
+    push(W(0.f, MAP_SIZE.y - BASE_H, puertaXc - puertaAncho * 0.5f, BASE_H));
+    push(W(puertaXc + puertaAncho * 0.5f, MAP_SIZE.y - BASE_H,
+           MAP_SIZE.x - (puertaXc + puertaAncho * 0.5f), BASE_H));
+
+    // 🔵 Peldaños laterales (puedes dejarlos igual o quitarlos)
+    const float STEP_H = 20.f, STEP_W0 = 32.f, STEP_WINC = 24.f;
+    const float Y0 = MAP_SIZE.y - BASE_H - (STEP_H * 3) - 6.f;
+    for (int i = 0; i < 3; ++i) {
+        float y = Y0 + i * STEP_H;
+        float w = STEP_W0 + i * STEP_WINC;
+        push(W(0.f, y, w, STEP_H));
+        push(W(MAP_SIZE.x - w, y, w, STEP_H));
+    }
+}
+
+void Gimnasio::aplicarColisiones() {
+    const sf::FloatRect playerNow = m_personaje.obtenerHitbox();
+
+    for (const auto& box : m_colisiones) {
+        if (intersecta(playerNow, box)) {
+            // Rebotar volviendo exactamente a la posición previa (suave y eficaz)
+            m_personaje.setPosition(m_prevPosJugador.x, m_prevPosJugador.y);
+            return;
+        }
+    }
 }
 
 Gimnasio::~Gimnasio()

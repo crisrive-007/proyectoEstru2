@@ -230,23 +230,13 @@ void Combate::iniciarCombate() {
 }
 
 void Combate::mostrarPregunta(int idx) {
+    if (m_preguntas.empty()) return; // por seguridad
+
     if (idx < 0 || idx >= static_cast<int>(m_preguntas.size())) {
-        m_estado = EstadoCombate::Gano;
-        stopBGM();
-        onWin();
-        m_subestado = Subestado::Feedback;
-        if (m_estado == EstadoCombate::Gano || m_estado == EstadoCombate::Perdio) {
-            if(m_vidaJugador == 5) {
-                m_txtPregunta.setString("¡Felicidades! Has ganado una vida extra... (Presiona ENTER)");
-            } else {
-                m_txtPregunta.setString("¡Felicidades! Has ganado... (Presiona ENTER)");
-
-            }
-        }
-
-        m_subestado = Subestado::Feedback;
-        idxSeleccion = -1;
-        return;
+        // En vez de terminar el combate, cicla el índice:
+        m_idxPregunta = 0;
+        idx = 0;
+        // (Opcional: barajar preguntas aquí)
     }
 
     const auto& p = m_preguntas[idx];
@@ -257,16 +247,14 @@ void Combate::mostrarPregunta(int idx) {
     m_txtOpcD.setString(p.opciones[3]);
     m_respuestaCorrecta = p.correcta;
 
-    m_subestado    = Subestado::Pregunta;
+    m_subestado  = Subestado::Pregunta;
     idxSeleccion = -1;
 
-    // Reinicia escalas (por si quedó un hover aplicado)
     m_btnA.setScale({1.f,1.f}); m_btnB.setScale({1.f,1.f});
     m_btnC.setScale({1.f,1.f}); m_btnD.setScale({1.f,1.f});
     m_txtOpcA.setScale({1.f,1.f}); m_txtOpcB.setScale({1.f,1.f});
     m_txtOpcC.setScale({1.f,1.f}); m_txtOpcD.setScale({1.f,1.f});
 
-    // Reset de temblores y posiciones base
     m_sprPika.setPosition(m_pikaBase);
     m_sprChari.setPosition(m_chariBase);
     m_shakePika = m_shakeChari = 0.f;
@@ -294,6 +282,10 @@ void Combate::procesarRespuesta(int idxOpcion) {
 
         m_vidaNpc = std::max(0, m_vidaNpc - 1);
         actualizarHUDNpc();
+        if (m_vidaNpc == 0) {
+            m_estado = EstadoCombate::Gano;
+            onWin();
+        }
 
     } else {
         m_txtPregunta.setString("¡Incorrecto! CHARIZARD uso Lanzallamas... (Presiona ENTER)");
@@ -493,37 +485,24 @@ void Combate::iniciarRonda() {
 }
 
 void Combate::avanzarTurno() {
-    // Determinamos quién juega este turno y “programamos” el siguiente
+    if (m_estado != EstadoCombate::Jugando) return; // <- NUEVO
+
     m_turnoActual  = m_proximoTurno;
     m_proximoTurno = (m_turnoActual == Turno::Jugador) ? Turno::Npc : Turno::Jugador;
 
-    // Consumimos la siguiente pregunta de la cola/vector
     m_idxPregunta += 1;
-
-    // Si no hay más preguntas, aquí decides tu política:
-    //  A) Terminar combate por fin de banco (si así lo manejabas antes)
-    //  B) Rebarajar/rotar (no recomendado sin avisar)
-    // Por defecto: si se acaban, quedamos en estado Gano (ajústalo si quieres)
     if (m_idxPregunta >= static_cast<int>(m_preguntas.size())) {
-        // Si prefieres cerrar solo por vidas, puedes clamp y no avanzar:
-        // m_idxPregunta = static_cast<int>(m_pregs.size()) - 1; // y retornar
-        m_estado = EstadoCombate::Gano; // o Perdio/Empate, según tu diseño
-        onWin();
-        m_subestado = Subestado::Feedback;
-        return;
+        m_idxPregunta = 0; // cíclico, ver punto 1
     }
 
-    // Mostrar la pregunta NUEVA en pantalla
-    mostrarPregunta(m_idxPregunta);  // <- ¡AQUÍ se ve la pregunta del turno!
+    mostrarPregunta(m_idxPregunta);
 
-    // Preparar subestado para responder
     m_subestado   = Subestado::Pregunta;
     idxSeleccion  = -1;
-    m_npcOpcion   = -1;              // limpiar resalto
+    m_npcOpcion   = -1;
 
-    // Si es turno del NPC, activar su temporizador (y seguir mostrando opciones)
     if (m_turnoActual == Turno::Npc) {
-        m_npcWait = 3.f;             // tras 3 s responde
+        m_npcWait = 3.f;
         m_lblTurno.setString("Turno del NPC (pensando...)");
     } else {
         m_lblTurno.setString("Tu turno");

@@ -92,6 +92,18 @@ class Gimnasio : public Estado
         bool jugadorCercaDelNPC() const;
         void iniciarCombate();
         std::vector<sf::FloatRect> buildNpcObstacles() const;
+
+        // --- Colisiones base del mapa ---
+        std::vector<sf::FloatRect>      m_colisiones;
+        std::vector<sf::RectangleShape> m_dbgColisiones;
+        sf::Vector2f                    m_prevPosJugador{};
+        bool                            m_debugColisiones = true;
+
+        // Helpers de colisiones
+        void cargarColisionesMapa();  // crea TODAS las hitboxes del Gimnasio
+        void aplicarColisiones();     // rebota al jugador a la pos previa
+        static bool intersecta(const sf::FloatRect& A, const sf::FloatRect& B);
+        sf::RectangleShape m_areaSalida;
 };
 
 #endif // GIMNASIO_H

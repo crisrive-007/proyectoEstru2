@@ -9,6 +9,8 @@
 #include "Biblioteca.h"
 #include "Gimnasio.h"
 #include "Estado.h"
+#include "EdificioKant.h"
+#include "EdificioDescartes.h"
 
 class MapaPrincipal : public Estado {
 public:
@@ -45,6 +47,8 @@ private:
     TileMap m_tilemapObjetos;
     sf::RectangleShape m_cuadradoBiblioteca;
     sf::RectangleShape m_cuadradoCombate;
+    sf::RectangleShape m_cuadradoKant;
+    sf::RectangleShape m_cuadradoDescartes;
     sf::RectangleShape m_hudBox;
     sf::Font m_fontHUD;
     sf::Text m_txtNombre;

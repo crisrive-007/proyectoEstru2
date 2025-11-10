@@ -52,8 +52,10 @@
 		<Unit filename="include/Biblioteca.h" />
 		<Unit filename="include/BotonOpcion.h" />
 		<Unit filename="include/Categorias.h" />
+		<Unit filename="include/Combate.h" />
 		<Unit filename="include/Estado.h" />
 		<Unit filename="include/GestorEstados.h" />
+		<Unit filename="include/Gimnasio.h" />
 		<Unit filename="include/MapaPrincipal.h" />
 		<Unit filename="include/MinijuegoArte.h" />
 		<Unit filename="include/MinijuegoCiencia.h" />
@@ -68,7 +70,9 @@
 		<Unit filename="src/BarraVida.cpp" />
 		<Unit filename="src/Biblioteca.cpp" />
 		<Unit filename="src/BotonOpcion.cpp" />
+		<Unit filename="src/Combate.cpp" />
 		<Unit filename="src/GestorEstados.cpp" />
+		<Unit filename="src/Gimnasio.cpp" />
 		<Unit filename="src/MapaPrincipal.cpp" />
 		<Unit filename="src/MinijuegoArte.cpp" />
 		<Unit filename="src/MinijuegoCiencia.cpp" />
