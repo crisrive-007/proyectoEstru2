@@ -201,7 +201,7 @@ void Combate::armarPreguntas() {
     m_preguntas.push_back({"Filosofos que postulan las ideas innatas en el sujeto.",
         {"Empiristas","Idealistas","Racionalistas","Innatistas"}, 2});
     m_preguntas.push_back({"De los siguientes filosofos selecciones el que no se considera Racionalista:",
-        {"David Hume","John Locke","Nicolas Malebranch","Francis Bacon"}, 2});
+        {"David Hume","John Locke","Nicolas\nMalebranch","Francis Bacon"}, 2});
     m_preguntas.push_back({"Es la doctrina que establece que todos nuestros conocimientos provienen de la razón.",
         {"Empirismo","Criticismo","Racionalismo","Epistemologia"}, 2});
     m_preguntas.push_back({"Uno de los siguientes filosofos, postula las ideas innatas en el sujeto:",

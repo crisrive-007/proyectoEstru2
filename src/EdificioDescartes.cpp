@@ -61,7 +61,7 @@ EdificioDescartes::EdificioDescartes(GestorEstados* g, sf::RenderWindow& win, Pe
 
     m_areaSalida.setSize({130.f, 32.f});
     m_areaSalida.setPosition({930.f, 980.f}); // ajusta según tu fondo
-    m_areaSalida.setFillColor(sf::Color(255, 0, 0, 120));
+    m_areaSalida.setFillColor(sf::Color(0, 0, 0, 0));
 
     // Dilema y objetos de evidencia
     cargarObjetosEvidencia();
@@ -637,8 +637,8 @@ void EdificioDescartes::cargarColisionesMapa() {
     auto push = [&](const sf::FloatRect& r){
         m_colisiones.push_back(r);
         sf::RectangleShape s; s.setPosition(r.position); s.setSize(r.size);
-        s.setFillColor(sf::Color(0,255,255,60));
-        s.setOutlineColor(sf::Color(0,120,255,200));
+        s.setFillColor(sf::Color(0,0,0,0));
+        s.setOutlineColor(sf::Color(0,0,0,0));
         s.setOutlineThickness(1.5f);
         m_dbgColisiones.push_back(s);
     };

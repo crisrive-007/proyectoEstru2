@@ -11,7 +11,6 @@
 #include "Estado.h"
 #include "EdificioKant.h"
 #include "EdificioDescartes.h"
-#include "ProgresoJuego.h"
 
 class MapaPrincipal : public Estado {
 public:
@@ -55,6 +54,7 @@ private:
     sf::Text m_txtNombre;
     sf::Texture m_texCorazon;
     std::vector<sf::Sprite> m_corazones;
+
     sf::Vector2f m_posAnterior;
 
     void bloquearSiCerrada(const sf::RectangleShape& puerta, bool cerrada);

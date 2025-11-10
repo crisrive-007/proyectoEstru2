@@ -634,8 +634,6 @@ std::string Personaje::getEquipo() const {
     if(equipo == EquipoFilosofico::Racionalistas) {return "Racionalista";}
 }
 
-// Al final del archivo, añade estas implementaciones:
-
 namespace {
 #pragma pack(push, 1)
 struct BinPersonajeV1 {

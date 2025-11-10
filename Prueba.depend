@@ -514,25 +514,22 @@
 1760488719 c:\users\river\downloads\sfml-3.0.2-windows-gcc-14.2.0-mingw-64-bit\sfml-3.0.2\include\sfml\system\sleep.hpp
 	<SFML/System/Export.hpp>
 
-1762789063 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\main.cpp
+1762834520 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\main.cpp
 	<SFML/Graphics.hpp>
 	"MapaPrincipal.h"
-	"TileMap.h"
 	"Personaje.h"
-	"Biblioteca.h"
 	"GestorEstados.h"
 	"Menu.h"
-	"SaveGameManager.h"
-	<iostream>
-	<memory>
 	<unordered_set>
+	<memory>
+	<iostream>
 
-1762788389 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\personaje.h
+1762827797 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\personaje.h
 	<SFML/Graphics.hpp>
 	<vector>
 	<unordered_set>
 
-1762787044 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\personaje.cpp
+1762827797 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\personaje.cpp
 	"Personaje.h"
 	<iostream>
 	<string>
@@ -551,25 +548,26 @@
 1761621380 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\pregunta.cpp
 	"Pregunta.h"
 
-1762703905 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\pregunta.h
+1762822583 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\pregunta.h
 	<iostream>
 	<string>
 	<array>
 
 1761608785 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\categorias.h
 
-1762788554 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\mapaprincipal.cpp
+1762835172 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\mapaprincipal.cpp
 	<SFML/Graphics.hpp>
 	<SFML/Graphics/Rect.hpp>
 	<vector>
 	"Personaje.h"
 	"Biblioteca.h"
 	"MapaPrincipal.h"
+	"ProgresoJuego.h"
 	"TileMap.h"
 	<iostream>
 	<optional>
 
-1762782236 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\mapaprincipal.h
+1762825561 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\mapaprincipal.h
 	<SFML/Graphics.hpp>
 	<vector>
 	<unordered_set>
@@ -580,41 +578,40 @@
 	"Estado.h"
 	"EdificioKant.h"
 	"EdificioDescartes.h"
-	"ProgresoJuego.h"
 
-1762558400 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\ruleta.h
+1762822583 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\ruleta.h
 	<SFML/Graphics.hpp>
 	<deque>
 	<vector>
 	<string>
 	<random>
 
-1762558400 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\ruleta.cpp
+1762822583 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\ruleta.cpp
 	"Ruleta.h"
 	<algorithm>
 	<chrono>
 	<random>
 
-1760924858 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\queue.cpp
+1762822583 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\queue.cpp
 	"Queue.h"
 
-1760924847 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\queue.h
+1762822583 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\queue.h
 	<iostream>
 	<vector>
 	<string>
 
-1761370805 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\tilemap.h
+1762822583 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\tilemap.h
 	<SFML/Graphics.hpp>
 	<vector>
 	<string>
 	<iostream>
 
-1761611465 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\tilemap.cpp
+1762822583 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\tilemap.cpp
 	"TileMap.h"
 	<iostream>
 	<SFML/Graphics.hpp>
 
-1762788753 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\biblioteca.cpp
+1762826650 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\biblioteca.cpp
 	"Biblioteca.h"
 	"MinijuegoArte.h"
 	"MinijuegoCiencia.h"
@@ -626,7 +623,7 @@
 	<cmath>
 	<cstdint>
 
-1762783843 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\biblioteca.h
+1762825561 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\biblioteca.h
 	<SFML/Graphics.hpp>
 	<vector>
 	<memory>
@@ -635,24 +632,24 @@
 	<array>
 	"Estado.h"
 
-1761268932 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\estado.h
+1762822583 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\estado.h
 	<SFML/Graphics.hpp>
 	<memory>
 	"Personaje.h"
 	"GestorEstados.h"
 
-1761268951 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\gestorestados.h
+1762822583 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\gestorestados.h
 	<SFML/Graphics.hpp>
 	<stack>
 	<memory>
 	"Estado.h"
 
-1761269869 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\gestorestados.cpp
+1762822583 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\gestorestados.cpp
 	"GestorEstados.h"
 	<iostream>
 	<utility>
 
-1762387098 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\minijuegoarte.h
+1762822583 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\minijuegoarte.h
 	<SFML/Graphics.hpp>
 	<SFML/Audio.hpp>
 	<array>
@@ -664,15 +661,15 @@
 	"Personaje.h"
 	"Pregunta.h"
 
-1762701856 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\bancopreguntas.h
+1762822583 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\bancopreguntas.h
 	<queue>
 	"Pregunta.h"
 
-1761667482 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\barravida.h
+1762822583 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\barravida.h
 	<SFML/Graphics.hpp>
 	<array>
 
-1761659129 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\barravida.cpp
+1762822583 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\barravida.cpp
 	"BarraVida.h"
 
 1760488718 c:\users\river\downloads\sfml-3.0.2-windows-gcc-14.2.0-mingw-64-bit\sfml-3.0.2\include\sfml\audio.hpp
@@ -816,28 +813,28 @@
 	<SFML/Audio/SoundFileFactory.hpp>
 	<memory>
 
-1761674719 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\botonopcion.h
+1762822583 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\botonopcion.h
 	<SFML/Graphics.hpp>
 	<string>
 	<memory>
 
-1761674771 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\botonopcion.cpp
+1762822583 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\botonopcion.cpp
 	"BotonOpcion.h"
 
-1762648467 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\minijuegoarte.cpp
+1762822583 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\minijuegoarte.cpp
 	"MinijuegoArte.h"
 	<cmath>
 	<iostream>
 	<algorithm>
 	<cstdint>
 
-1762649575 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\minijuegopolitica.cpp
+1762822583 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\minijuegopolitica.cpp
 	"MinijuegoPolitica.h"
 	<iostream>
 	<sstream>
 	<algorithm>
 
-1762633173 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\minijuegopolitica.h
+1762822583 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\minijuegopolitica.h
 	<SFML/Graphics.hpp>
 	<SFML/Audio.hpp>
 	<queue>
@@ -847,13 +844,13 @@
 	"Personaje.h"
 	"Pregunta.h"
 
-1762633749 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\minijuegociencia.cpp
+1762822583 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\minijuegociencia.cpp
 	"MinijuegoCiencia.h"
 	<iostream>
 	<algorithm>
 	<cmath>
 
-1762633719 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\minijuegociencia.h
+1762822583 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\minijuegociencia.h
 	<SFML/Graphics.hpp>
 	<SFML/Audio.hpp>
 	<array>
@@ -864,7 +861,7 @@
 	"Personaje.h"
 	"Pregunta.h"
 
-1762634254 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\minijuegohistoria.h
+1762822583 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\minijuegohistoria.h
 	<SFML/Graphics.hpp>
 	<SFML/Audio.hpp>
 	<array>
@@ -876,18 +873,18 @@
 	"Personaje.h"
 	"Pregunta.h"
 
-1762648500 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\minijuegohistoria.cpp
+1762822583 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\minijuegohistoria.cpp
 	"MinijuegoHistoria.h"
 	<iostream>
 
-1762784639 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\combate.cpp
+1762836066 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\combate.cpp
 	"Combate.h"
 	<SFML/Config.hpp>
 	<iostream>
 	<algorithm>
 	<cmath>
 
-1762677440 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\combate.h
+1762822583 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\combate.h
 	<SFML/Graphics.hpp>
 	<SFML/Audio.hpp>
 	<array>
@@ -899,22 +896,22 @@
 	"Personaje.h"
 	"Pregunta.h"
 
-1762751297 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\gimnasio.h
+1762822583 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\gimnasio.h
 	<SFML/Graphics.hpp>
 	"Estado.h"
 	"Combate.h"
 	<memory>
 
-1762781180 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\gimnasio.cpp
+1762835569 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\gimnasio.cpp
 	"Gimnasio.h"
 	"ProgresoJuego.h"
 	<iostream>
 	<algorithm>
 
-1762703730 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\bancopreguntas.cpp
+1762822583 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\bancopreguntas.cpp
 	"BancoPreguntas.h"
 
-1762781180 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\edificiokant.cpp
+1762835569 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\edificiokant.cpp
 	"EdificioKant.h"
 	"GestorEstados.h"
 	"ProgresoJuego.h"
@@ -923,7 +920,7 @@
 	<cmath>
 	<algorithm>
 
-1762757919 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\edificiokant.h
+1762822583 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\edificiokant.h
 	"Estado.h"
 	<queue>
 	<array>
@@ -931,7 +928,7 @@
 	<SFML/Graphics.hpp>
 	"Pregunta.h"
 
-1762763619 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\edificiodescartes.h
+1762836180 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\edificiodescartes.h
 	"Estado.h"
 	"Pregunta.h"
 	<SFML/Graphics.hpp>
@@ -941,34 +938,40 @@
 	<string>
 	<optional>
 
-1762781180 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\edificiodescartes.cpp
-	"EdificioDescartes.h"
-	"GestorEstados.h"
-	"ProgresoJuego.h"
-	<cmath>
-	<sstream>
-	<algorithm>
-
-1762780786 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\progresojuego.h
-
-1762788920 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\savegamemanager.cpp
-	"SaveGameManager.h"
-	"Personaje.h"
-	"ProgresoJuego.h"
-	<fstream>
-	<cstdint>
-
-1762788920 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\savegamemanager.h
-	<string>
-
-1762788335 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\menu.cpp
-	"Menu.h"
-	<algorithm>
-	<iostream>
-
-1762788164 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\menu.h
+1762836066 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\edificiodescartes.cpp
+	"Estado.h"
+	"Pregunta.h"
 	<SFML/Graphics.hpp>
-	<functional>
+	<queue>
+	<vector>
 	<array>
 	<string>
+	<optional>
+
+1762835104 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\menu.cpp
+	"Menu.h"
+	"GestorEstados.h"
+	"MapaPrincipal.h"
+	"SaveGameManager.h"
+	<algorithm>
+	<iostream>
+	<memory>
+
+1762835047 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\menu.h
+	<SFML/Graphics.hpp>
+	<array>
+	<string>
+	"Estado.h"
+
+1762828862 source:c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\src\savegamemanager.cpp
+	"SaveGameManager.h"
+	<iostream>
+
+1762828854 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\savegamemanager.h
+	<string>
+	<fstream>
+	"ProgresoJuego.h"
+	"Personaje.h"
+
+1762828254 c:\users\river\onedrive\escritorio\tareas entregadas\estructura de datos ii\proyectoestru2\include\progresojuego.h
 

@@ -24,11 +24,6 @@ Gimnasio::Gimnasio(GestorEstados* gestor, sf::RenderWindow& window, Personaje& p
 , m_txtNombre(m_font)
 , m_txtDialogo(m_font)
 {
-    if (!ProgresoJuego::get().puedeEntrar(ProgresoJuego::Nivel::Gimnasio)) {
-        std::cout << "🔒 Gimnasio bloqueado: termina la Biblioteca primero.\n";
-        gestor->sacarEstado();
-        return;
-    }
     // === Fondo base (cámbialo por el que quieras) ===
     if (!m_texFondo.loadFromFile("assets/Tilesets/GimnasioPokemon.png")) {
         std::cerr << "✗ ERROR: assets/Tilesets/FondoSimple.png\n";
@@ -88,7 +83,7 @@ Gimnasio::Gimnasio(GestorEstados* gestor, sf::RenderWindow& window, Personaje& p
 
     m_areaSalida.setSize({210.f, 32.f});
     m_areaSalida.setPosition({ MAP_ORIG.x + MAP_SIZE.x * 0.5f - 105.f, MAP_ORIG.y + MAP_SIZE.y + 0.f });
-    m_areaSalida.setFillColor(sf::Color(255, 0, 0, 120));
+    m_areaSalida.setFillColor(sf::Color(0, 0, 0, 0));
 
     // Colisiones del Gimnasio
     cargarColisionesMapa();
@@ -369,13 +364,13 @@ void Gimnasio::cargarColisionesMapa() {
     auto W = [&](float x, float y, float w, float h) -> sf::FloatRect {
         return sf::FloatRect({MAP_ORIG.x + x, MAP_ORIG.y + y}, {w, h});
     };
-    auto push = [&](const sf::FloatRect& r, sf::Color fill = sf::Color(0,255,255,60)) {
+    auto push = [&](const sf::FloatRect& r, sf::Color fill = sf::Color(0,0,0,0)) {
         m_colisiones.push_back(r);
         sf::RectangleShape s;
         s.setPosition(r.position);
         s.setSize(r.size);
         s.setFillColor(fill);
-        s.setOutlineColor(sf::Color(0,120,255,200));
+        s.setOutlineColor(sf::Color(0,0,0,0));
         s.setOutlineThickness(1.5f);
         m_dbgColisiones.push_back(s);
     };

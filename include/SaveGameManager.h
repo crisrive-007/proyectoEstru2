@@ -1,15 +1,26 @@
 #ifndef SAVEGAMEMANAGER_H
 #define SAVEGAMEMANAGER_H
-#include <string>
-class Personaje;
-struct ProgresoJuego;
 
-namespace SaveGame {
-bool guardarJuego(const Personaje& pj, const ProgresoJuego& prog,
-                  const std::string& rutaPersonaje="save_personaje.bin",
-                  const std::string& rutaProgreso ="save_progreso.bin");
-bool cargarJuego(Personaje& pj, ProgresoJuego& prog,
-                 const std::string& rutaPersonaje="save_personaje.bin",
-                 const std::string& rutaProgreso ="save_progreso.bin");
-}
-#endif
+#include <string>
+#include <fstream>
+#include "ProgresoJuego.h"
+#include "Personaje.h"
+
+struct DatosJuego {
+    bool bibliotecaCleared = false;
+    bool gimnasioCleared   = false;
+    bool kantCleared       = false;
+    bool descartesCleared  = false;
+};
+
+class SaveGame {
+private:
+    static const std::string RUTA_ARCHIVO;
+
+public:
+    static bool guardarJuego(const Personaje& personaje, const ProgresoJuego& progreso);
+
+    static bool cargarJuego(Personaje& personaje, ProgresoJuego& progreso);
+};
+
+#endif // SAVEGAMEMANAGER_H

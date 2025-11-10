@@ -1,41 +1,35 @@
 #ifndef MENU_H
 #define MENU_H
 
+#pragma once
 #include <SFML/Graphics.hpp>
-#include <functional>
 #include <array>
 #include <string>
+#include "Estado.h"
 
-class Menu {
+class Menu final : public Estado {
 public:
     enum Opcion { NuevaPartida = 0, CargarPartida = 1, NUM_OPCIONES = 2 };
 
-    explicit Menu(sf::RenderWindow& window, const sf::Font* fontOpt = nullptr);
+    Menu(GestorEstados* gestor, sf::RenderWindow& window, Personaje& personaje, const sf::Font* fontOpt = nullptr);
+    ~Menu() override = default;
 
-    // Callbacks
-    std::function<void(const std::string&)> onNuevaPartida; // ← recibe nombre
-    std::function<void()>                    onCargarPartida;
-
-    // Loop
-    void handleEvent(const sf::Event& ev);
-    void update();
-    void draw();
-
-    // Visibilidad
-    void setVisible(bool v) { m_visible = v; }
-    bool isVisible() const { return m_visible; }
+    // Contrato de Estado
+    void manejarEventos(sf::RenderWindow& window) override;
+    void actualizar() override;
+    void dibujar(sf::RenderWindow& window) override;
 
     // Personalización
     void setTitle(const std::string& titulo);
     void setButtonText(Opcion op, const std::string& txt);
 
 private:
-    // *** MANTENER ESTE ORDEN ***
+    // Referencias
     sf::RenderWindow& m_window;
-    bool m_visible = true;
+    Personaje&        m_personaje;
 
     // Recursos
-    sf::Font        m_ownedFont;     // si no pasas font
+    sf::Font        m_ownedFont;
     const sf::Font* m_font = nullptr;
 
     // UI
@@ -43,16 +37,21 @@ private:
     std::array<sf::RectangleShape, NUM_OPCIONES> m_buttons;
     std::array<sf::Text,            NUM_OPCIONES> m_labels;
 
-    // Entrada de nombre
+    // Input de nombre
     bool        m_pidiendoNombre = false;
     std::string m_nombreJugador;
     sf::Text    m_textoNombre;
     sf::RectangleShape m_cajaNombre;
 
-    // Estado
+    // Feedback guardado/cargado
+    sf::Text    m_feedback;
+    sf::Clock   m_feedbackClock;
+    bool        m_mostrarFeedback = false;
+
+    // Estado de selección
     int m_selected = 0;
 
-    // Internos
+    // Helpers
     void layout();
     void applyStyles();
     void selectNext(int dir);
@@ -60,6 +59,13 @@ private:
     bool isMouseOver(const sf::RectangleShape& shape) const;
     void iniciarInputNombre();
     void manejarInputNombre(const sf::Event& ev);
+
+    // Transiciones / persistencia
+    void crearYEmpujarMapaNuevaPartida();
+    void crearYEmpujarMapaCargarPartida();
+    void guardarPartida();
+
+    void mostrarFeedback(const std::string& msg);
 };
 
-#endif
+#endif // MENU_H

@@ -4,6 +4,7 @@
 #include "Personaje.h"
 #include "Biblioteca.h"
 #include "MapaPrincipal.h"
+#include "ProgresoJuego.h"
 #include "TileMap.h"
 #include <iostream>
 #include <optional>
@@ -258,98 +259,101 @@ void MapaPrincipal::ejecutarMapa() {
 }
 
 void MapaPrincipal::actualizar() {
-    // 0) Guardar posición previa para rebotar si pega con una puerta cerrada
     m_posAnterior = m_personaje.getPosition();
 
-    // 1) Update normal del personaje y tiles
+    // Tu update normal
     m_personaje.actualizar(m_tilesBase, m_tilesObjetos, m_ancho, m_alto);
     m_personaje.setTilesValidos(m_tilesValidos);
 
     sf::FloatRect personajeBounds = m_personaje.obtenerHitbox();
 
-    // 2) Estado de progreso (grafo + no re-entrada)
     auto& prog = ProgresoJuego::get();
 
-    // Reglas:
-    // - Biblioteca: siempre estaría "desbloqueable", PERO si ya fue pasada => cerrar (no re-entrada).
-    // - Gimnasio: sólo si Biblioteca pasada Y Gimnasio NO pasado.
-    // - Kant/Descartes: sólo si Gimnasio pasado Y cada uno NO pasado.
-    const bool puertaBiblioCerrada = prog.bibliotecaCleared;                   // no volver a entrar
+    // Estado del progreso → define qué puertas están cerradas
+    const bool puertaBibCerrada = prog.bibliotecaCleared;
     const bool puertaGymCerrada    = !(prog.bibliotecaCleared) || prog.gimnasioCleared;
     const bool puertaKantCerrada   = !(prog.gimnasioCleared)  || prog.kantCleared;
     const bool puertaDescCerrada   = !(prog.gimnasioCleared)  || prog.descartesCleared;
 
-    // Helper lambda de AABB (evita intersects de SFML 3)
-    auto aabb = [](const sf::FloatRect& A, const sf::FloatRect& B){
-        return (A.position.x < B.position.x + B.size.x) &&
-               (A.position.x + A.size.x > B.position.x) &&
-               (A.position.y < B.position.y + B.size.y) &&
-               (A.position.y + A.size.y > B.position.y);
-    };
-
-    // --- Puerta/trigger Biblioteca ---
+    // --- Trigger Biblioteca (siempre abierta) ---
     {
-        sf::FloatRect trigger = m_cuadradoBiblioteca.getGlobalBounds();
-        if (aabb(personajeBounds, trigger)) {
-            if (puertaBiblioCerrada) {
-                // Ya pasó Biblioteca -> puerta cerrada permanente
-                m_personaje.setPosition((int)m_posAnterior.x, (int)m_posAnterior.y);
+        sf::FloatRect triggerArea = m_cuadradoBiblioteca.getGlobalBounds();
+        bool colision = (personajeBounds.position.x < triggerArea.position.x + triggerArea.size.x) &&
+                        (personajeBounds.position.x + personajeBounds.size.x > triggerArea.position.x) &&
+                        (personajeBounds.position.y < triggerArea.position.y + triggerArea.size.y) &&
+                        (personajeBounds.position.y + personajeBounds.size.y > triggerArea.position.y);
+
+        if (colision) {
+            if(puertaBibCerrada) {
+                    m_personaje.setPosition((int)m_posAnterior.x, (int)m_posAnterior.y);
             } else {
-                auto estado = std::make_unique<Biblioteca>(gestor, m_window, m_personaje);
-                estado->ejecutarMapa();
-                gestor->empujarEstado(std::move(estado));
+                std::unique_ptr<Biblioteca> estadoBiblioteca = std::make_unique<Biblioteca>(gestor, m_window, m_personaje);
+                estadoBiblioteca->ejecutarMapa();
+                gestor->empujarEstado(std::move(estadoBiblioteca));
                 return;
             }
         }
     }
 
-    // --- Puerta/trigger Gimnasio ---
+    // --- Trigger Gimnasio (bloquea puerta si no toca) ---
     {
-        sf::FloatRect trigger = m_cuadradoCombate.getGlobalBounds();
-        if (aabb(personajeBounds, trigger)) {
+        sf::FloatRect triggerArea2 = m_cuadradoCombate.getGlobalBounds();
+        bool colision2 = (personajeBounds.position.x < triggerArea2.position.x + triggerArea2.size.x) &&
+                         (personajeBounds.position.x + personajeBounds.size.x > triggerArea2.position.x) &&
+                         (personajeBounds.position.y < triggerArea2.position.y + triggerArea2.size.y) &&
+                         (personajeBounds.position.y + personajeBounds.size.y > triggerArea2.position.y);
+
+        if (colision2) {
             if (puertaGymCerrada) {
-                // Aún no pasó Biblioteca o ya pasó Gimnasio -> cerrada
+                // Puerta cerrada → rebote
                 m_personaje.setPosition((int)m_posAnterior.x, (int)m_posAnterior.y);
             } else {
-                auto estado = std::make_unique<Gimnasio>(gestor, m_window, m_personaje);
-                estado->ejecutarMapa();
-                gestor->empujarEstado(std::move(estado));
+                std::unique_ptr<Gimnasio> estadoGimnasio = std::make_unique<Gimnasio>(gestor, m_window, m_personaje);
+                estadoGimnasio->ejecutarMapa();
+                gestor->empujarEstado(std::move(estadoGimnasio));
                 return;
             }
         }
     }
 
-    // --- Puerta/trigger Edificio Kant ---
+    // --- Trigger Kant (bloquea puerta si no toca) ---
     {
-        sf::FloatRect trigger = m_cuadradoKant.getGlobalBounds();
-        if (aabb(personajeBounds, trigger)) {
+        sf::FloatRect triggerArea3 = m_cuadradoKant.getGlobalBounds();
+        bool colision3 = (personajeBounds.position.x < triggerArea3.position.x + triggerArea3.size.x) &&
+                         (personajeBounds.position.x + personajeBounds.size.x > triggerArea3.position.x) &&
+                         (personajeBounds.position.y < triggerArea3.position.y + triggerArea3.size.y) &&
+                         (personajeBounds.position.y + personajeBounds.size.y > triggerArea3.position.y);
+
+        if (colision3) {
             if (puertaKantCerrada) {
-                // Aún no pasó Gimnasio o ya pasó Kant -> cerrada
                 m_personaje.setPosition((int)m_posAnterior.x, (int)m_posAnterior.y);
             } else {
-                auto estado = std::make_unique<EdificioKant>(gestor, m_window, m_personaje);
-                gestor->empujarEstado(std::move(estado));
+                std::unique_ptr<EdificioKant> estadoKant = std::make_unique<EdificioKant>(gestor, m_window, m_personaje);
+                gestor->empujarEstado(std::move(estadoKant));
                 return;
             }
         }
     }
 
-    // --- Puerta/trigger Edificio Descartes ---
+    // --- Trigger Descartes (bloquea puerta si no toca) ---
     {
-        sf::FloatRect trigger = m_cuadradoDescartes.getGlobalBounds();
-        if (aabb(personajeBounds, trigger)) {
+        sf::FloatRect triggerArea4 = m_cuadradoDescartes.getGlobalBounds();
+        bool colision4 = (personajeBounds.position.x < triggerArea4.position.x + triggerArea4.size.x) &&
+                         (personajeBounds.position.x + personajeBounds.size.x > triggerArea4.position.x) &&
+                         (personajeBounds.position.y < triggerArea4.position.y + triggerArea4.size.y) &&
+                         (personajeBounds.position.y + personajeBounds.size.y > triggerArea4.position.y);
+
+        if (colision4) {
             if (puertaDescCerrada) {
-                // Aún no pasó Gimnasio o ya pasó Descartes -> cerrada
                 m_personaje.setPosition((int)m_posAnterior.x, (int)m_posAnterior.y);
             } else {
-                auto estado = std::make_unique<EdificioDescartes>(gestor, m_window, m_personaje);
-                gestor->empujarEstado(std::move(estado));
+                std::unique_ptr<EdificioDescartes> estadoDescartes = std::make_unique<EdificioDescartes>(gestor, m_window, m_personaje);
+                gestor->empujarEstado(std::move(estadoDescartes));
                 return;
             }
         }
     }
 
-    // 3) HUD como siempre
     actualizarHUD();
 }
 
@@ -396,8 +400,13 @@ void MapaPrincipal::bloquearSiCerrada(const sf::RectangleShape& puerta, bool cer
     const sf::FloatRect puertaBox = puerta.getGlobalBounds();
     const sf::FloatRect pjBox     = m_personaje.obtenerHitbox();
 
-    if (overlapRect(pjBox, puertaBox)) {
-        // Rebote: vuelve a la posición previa
+    bool colision = (pjBox.position.x < puertaBox.position.x + puertaBox.size.x) &&
+                    (pjBox.position.x + pjBox.size.x > puertaBox.position.x) &&
+                    (pjBox.position.y < puertaBox.position.y + puertaBox.size.y) &&
+                    (pjBox.position.y + pjBox.size.y > puertaBox.position.y);
+
+    if (colision) {
+        // Rebote a posición anterior
         m_personaje.setPosition((int)m_posAnterior.x, (int)m_posAnterior.y);
     }
 }

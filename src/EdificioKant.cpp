@@ -45,11 +45,6 @@ EdificioKant::EdificioKant(GestorEstados* gestor, sf::RenderWindow& window, Pers
     sf::Text(m_font, "", 20)
 }}
 {
-    if (!ProgresoJuego::get().puedeEntrar(ProgresoJuego::Nivel::Kant)) {
-        std::cout << "🔒 Edificio Kant bloqueado: termina el Gimnasio primero.\n";
-        gestor->sacarEstado();
-        return;
-    }
     // === FONDO DEL AULA ===
     if (!m_texFondo.loadFromFile("assets/Tilesets/aulaKant.png")) {
         std::cerr << "Error: no se pudo cargar assets/Tilesets/aulaKant.png\n";
@@ -116,7 +111,7 @@ EdificioKant::EdificioKant(GestorEstados* gestor, sf::RenderWindow& window, Pers
 
     m_areaSalida.setSize({190.f, 32.f});
     m_areaSalida.setPosition({868.f, 980.f}); // ajusta según tu mapa
-    m_areaSalida.setFillColor(sf::Color(255, 0, 0, 120));
+    m_areaSalida.setFillColor(sf::Color(0, 0, 0, 0));
 
     cargarColisionesMapa();
 }
@@ -638,7 +633,7 @@ void EdificioKant::interaccionSalida() {
     ProgresoJuego::get().marcarCleared(ProgresoJuego::Nivel::Kant);
     gestor->sacarEstado();
     // Reubica al jugador fuera del edificio (ajusta a tu mundo exterior)
-    m_personaje.setPosition(840.f, 605.f);
+    m_personaje.setPosition(915.f, 300.f);
 }
 
 // === EdificioKant.cpp ===
@@ -658,8 +653,8 @@ void EdificioKant::cargarColisionesMapa() {
         sf::RectangleShape s;
         s.setPosition(r.position);
         s.setSize(r.size);
-        s.setFillColor(sf::Color(0,255,255,60));
-        s.setOutlineColor(sf::Color(0,120,255,200));
+        s.setFillColor(sf::Color(0,0,0,0));
+        s.setOutlineColor(sf::Color(0,0,0,0));
         s.setOutlineThickness(1.5f);
         m_dbgColisiones.push_back(s);
     };

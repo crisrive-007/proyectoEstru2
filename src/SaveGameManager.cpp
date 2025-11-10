@@ -1,49 +1,56 @@
 #include "SaveGameManager.h"
-#include "Personaje.h"
-#include "ProgresoJuego.h"
-#include <fstream>
-#include <cstdint>
+#include <iostream>
 
-namespace {
-#pragma pack(push,1)
-struct BinProgresoV1 {
-    int32_t version = 1;
-    uint8_t bibl, gim, kant, desc;
-};
-#pragma pack(pop)
+const std::string SaveGame::RUTA_ARCHIVO = "savegame.dat";
+const std::string RUTA_PERSONAJE_DAT = "personaje.dat";
 
-static bool guardarProgreso(const ProgresoJuego& p, const std::string& ruta){
-    BinProgresoV1 d{};
-    d.bibl = p.bibliotecaCleared; d.gim = p.gimnasioCleared;
-    d.kant = p.kantCleared;       d.desc = p.descartesCleared;
-    std::ofstream out(ruta, std::ios::binary);
-    if(!out) return false;
-    out.write(reinterpret_cast<const char*>(&d), sizeof(d));
-    return static_cast<bool>(out);
-}
-static bool cargarProgreso(ProgresoJuego& p, const std::string& ruta){
-    BinProgresoV1 d{};
-    std::ifstream in(ruta, std::ios::binary);
-    if(!in) return false;
-    in.read(reinterpret_cast<char*>(&d), sizeof(d));
-    if(!in || d.version!=1) return false;
-    p.bibliotecaCleared=d.bibl; p.gimnasioCleared=d.gim;
-    p.kantCleared=d.kant; p.descartesCleared=d.desc;
+bool SaveGame::guardarJuego(const Personaje& personaje, const ProgresoJuego& progreso) {
+
+    DatosJuego datos;
+    datos.bibliotecaCleared = ProgresoJuego::get().bibliotecaCleared;
+    datos.gimnasioCleared   = ProgresoJuego::get().gimnasioCleared;
+    datos.kantCleared       = ProgresoJuego::get().kantCleared;
+    datos.descartesCleared  = ProgresoJuego::get().descartesCleared;
+
+    std::ofstream archivo(RUTA_ARCHIVO, std::ios::binary | std::ios::out | std::ios::trunc);
+    if (!archivo.is_open()) {
+        std::cerr << "❌ SAVE ERROR: No se pudo abrir/crear " << RUTA_ARCHIVO << "\n";
+        return false;
+    }
+
+    archivo.write(reinterpret_cast<const char*>(&datos), sizeof(DatosJuego));
+    archivo.close();
+
+    if (!personaje.guardarEnBinario(RUTA_PERSONAJE_DAT)) {
+        std::cerr << "❌ SAVE ERROR: Fallo al guardar los datos del Personaje en " << RUTA_PERSONAJE_DAT << "\n";
+        return false;
+    }
+
+    std::cout << "[SAVE] Datos de juego y personaje guardados exitosamente.\n";
     return true;
 }
-}
 
-namespace SaveGame {
-bool guardarJuego(const Personaje& pj, const ProgresoJuego& prog,
-                  const std::string& rp, const std::string& rg){
-    bool okPj = pj.guardarEnBinario(rp);
-    bool okPg = guardarProgreso(prog, rg);
-    return okPj && okPg;
-}
-bool cargarJuego(Personaje& pj, ProgresoJuego& prog,
-                 const std::string& rp, const std::string& rg){
-    bool okPj = pj.cargarDesdeBinario(rp);
-    bool okPg = cargarProgreso(prog, rg);
-    return okPj && okPg;
-}
+bool SaveGame::cargarJuego(Personaje& personaje, ProgresoJuego& progreso) {
+    std::ifstream archivo(RUTA_ARCHIVO, std::ios::binary | std::ios::in);
+    if (!archivo.is_open()) {
+        std::cerr << "❌ LOAD ERROR: No se encontr el archivo de guardado: " << RUTA_ARCHIVO << "\n";
+        return false;
+    }
+
+    DatosJuego datos;
+    archivo.read(reinterpret_cast<char*>(&datos), sizeof(DatosJuego));
+    archivo.close();
+
+    ProgresoJuego::get().bibliotecaCleared = datos.bibliotecaCleared;
+    ProgresoJuego::get().gimnasioCleared   = datos.gimnasioCleared;
+    ProgresoJuego::get().kantCleared       = datos.kantCleared;
+    ProgresoJuego::get().descartesCleared  = datos.descartesCleared;
+
+    if (!personaje.cargarDesdeBinario(RUTA_PERSONAJE_DAT)) {
+        std::cerr << "❌ LOAD ERROR: Fallo al cargar los datos del Personaje desde " << RUTA_PERSONAJE_DAT << "\n";
+        return false;
+    }
+
+    std::cout << "[LOAD] Datos de juego y personaje cargados exitosamente.\n";
+    return true;
 }

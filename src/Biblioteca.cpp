@@ -295,7 +295,7 @@ void Biblioteca::cargarColisionesMapa() {
     // Gadgets a la derecha de cada poste (bloques cuadrados)
     auto pushG = [&](float x){ m_colisiones.push_back(W(x,265,110,110));
         sf::RectangleShape s; s.setPosition({MAP_ORIG.x + x, MAP_ORIG.y + 265});
-        s.setSize({110,110}); s.setFillColor(sf::Color(0,0,0,0));
+        s.setSize({110,110}); s.setFillColor(sf::Color(0,0,0,60));
         s.setOutlineColor(sf::Color(0,0,0,0)); s.setOutlineThickness(1.5f);
         m_dbgColisiones.push_back(s);
     };
@@ -402,9 +402,6 @@ void Biblioteca::setupRuleta() {
     if (!m_fontR.openFromFile("assets/Pokemon_GB.ttf")) {
         std::cerr << "✗ ERROR: assets/Pokemon_GB.ttf\n";
     }
-
-    m_opcionesR = {"Arte", "Politica", "Ciencia", "Historia"};
-    m_idxActual = 0;
 
     m_txtR.setFont(m_fontR);
     m_txtR.setString(m_opcionesR[m_idxActual]);
@@ -663,7 +660,6 @@ void Biblioteca::interaccionPuertas() {
 #else
     if (intersecta(personajeBounds, m_areaSalida.getGlobalBounds())) {
 #endif
-        // ✅ Nuevo: sólo permitimos salir si ya hiciste las 4 categorías
         if (!puedeSalirBiblioteca()) {
             // Empuja hacia atrás y muestra mensaje con faltantes
             m_personaje.setPosition(m_prevPosJugador.x, m_prevPosJugador.y);
@@ -675,7 +671,6 @@ void Biblioteca::interaccionPuertas() {
             return;
         }
 
-        // (Comportamiento original) — ya puedes salir
         std::cout << "🚪 Saliendo de la biblioteca.\n";
         ProgresoJuego::get().marcarCleared(ProgresoJuego::Nivel::Biblioteca);
         gestor->sacarEstado();
