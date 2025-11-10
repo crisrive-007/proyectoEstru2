@@ -1,7 +1,10 @@
 #include "EdificioDescartes.h"
 #include "GestorEstados.h"
+#include "ProgresoJuego.h"
+
 #include <cmath>
 #include <sstream>
+#include <algorithm>
 
 static inline sf::Vector2f center(const sf::Sprite& s){
     auto r = s.getGlobalBounds();
@@ -17,6 +20,11 @@ EdificioDescartes::EdificioDescartes(GestorEstados* g, sf::RenderWindow& win, Pe
   m_txt(m_font,"",20), m_fb(m_font,"",20), m_hint(m_font,"SPACE",16),
   m_opts{ sf::Text(m_font,"",20), sf::Text(m_font,"",20), sf::Text(m_font,"",20), sf::Text(m_font,"",20) }
 {
+    if (!ProgresoJuego::get().puedeEntrar(ProgresoJuego::Nivel::Descartes)) {
+        std::cout << "🔒 Edificio Descartes bloqueado: termina el Gimnasio primero.\n";
+        gestor->sacarEstado();
+        return;
+    }
     // Assets base
     m_texFondo.loadFromFile("assets/EdificioDescartes/lab_descartes.png");
     m_sprFondo.setTexture(m_texFondo,true);
@@ -57,6 +65,7 @@ EdificioDescartes::EdificioDescartes(GestorEstados* g, sf::RenderWindow& win, Pe
 
     // Dilema y objetos de evidencia
     cargarObjetosEvidencia();
+    cargarColisionesMapa();
 }
 
 void EdificioDescartes::cargarObjetosEvidencia() {
@@ -394,19 +403,33 @@ void EdificioDescartes::manejarEventos(sf::RenderWindow& win){
 }
 
 void EdificioDescartes::actualizar(){
-    if (!m_mostrarQuiz && !m_dialogOn) m_personaje.actualizarSinTiles(m_window.getSize().x, m_window.getSize().y);
-    m_cerca = detectarCercania();
+    // Posición previa ANTES de mover
+    m_prevPosJugador = m_personaje.getPosition();
 
-    auto glow=[&](sf::Sprite& s, bool on){ s.setColor(on? sf::Color(255,255,255,220): sf::Color::White); };
-    glow(m_sprEvi,  m_cerca==HitDesc::M_Evidencia  && !m_eviOK);
-    glow(m_sprAna,  m_cerca==HitDesc::M_Analisis   && m_eviOK && !m_anaOK);
-    glow(m_sprSin,  m_cerca==HitDesc::M_Sintesis   && m_anaOK && !m_sinOK);
-    glow(m_sprEnum, m_cerca==HitDesc::M_Enumeracion&& m_sinOK && !m_enumOK);
-    glow(m_sprNPC,  m_cerca==HitDesc::NPC);
+    if (!m_mostrarQuiz && !m_dialogOn)
+        m_personaje.actualizarSinTiles(m_window.getSize().x, m_window.getSize().y);
 
+    // Clamp al área visible del laboratorio
+    sf::FloatRect gb = m_sprFondo.getGlobalBounds();
+    {
+        sf::FloatRect hb = m_personaje.obtenerHitbox();
+        sf::Vector2f p = m_personaje.getPosition();
+        const float minX = gb.position.x;
+        const float minY = gb.position.y;
+        const float maxX = gb.position.x + gb.size.x - hb.size.x;
+        const float maxY = gb.position.y + gb.size.y - hb.size.y;
+        p.x = std::clamp(p.x, minX, maxX);
+        p.y = std::clamp(p.y, minY, maxY);
+        m_personaje.setPosition(
+            (int)std::lround(p.x),
+            (int)std::lround(p.y)
+        );
+    }
+
+    aplicarColisiones();             // ← NUEVO
+    m_cerca = detectarCercania();    // (lo tuyo)
     m_hintBob += 3.f*(1.f/60.f);
-
-    interaccionSalida();
+    interaccionSalida();             // (ya la tienes)
 }
 
 void EdificioDescartes::dibujar(sf::RenderWindow& w){
@@ -416,6 +439,11 @@ void EdificioDescartes::dibujar(sf::RenderWindow& w){
     w.draw(m_sprEvi); w.draw(m_sprAna); w.draw(m_sprSin); w.draw(m_sprEnum);
     w.draw(m_sprNPC);
     m_personaje.dibujar(w);
+
+    if (m_debugColisiones){
+        for (auto& r : m_dbgColisiones) w.draw(r);
+        for (auto& n : m_dbgNumeros) w.draw(n);
+    }
 
     if (m_evidenciaActiva){
         // 1) Dibuja panel estilo dialogo y obtiene rect
@@ -582,7 +610,105 @@ void EdificioDescartes::interaccionSalida() {
 
     if (intersecta(personaje, salida)) {
         std::cout << "🚪 Saliendo del laboratorio de Descartes.\n";
+        ProgresoJuego::get().marcarCleared(ProgresoJuego::Nivel::Descartes);
         gestor->sacarEstado();
         m_personaje.setPosition(950.f, 300.f); // posición al regresar al mapa
+    }
+}
+
+void EdificioDescartes::cargarColisionesMapa() {
+    m_colisiones.clear();
+    m_dbgColisiones.clear();
+
+    // Fondo real en pantalla
+    const sf::FloatRect gb = m_sprFondo.getGlobalBounds();
+
+    // Tamaño lógico del arte
+    const float LW = 1536.f, LH = 864.f;
+    const float fx = gb.size.x / LW;
+    const float fy = gb.size.y / LH;
+
+    auto T = [&](float x, float y, float w, float h) -> sf::FloatRect {
+        return sf::FloatRect(
+            { gb.position.x + x * fx, gb.position.y + y * fy },
+            { w * fx, h * fy }
+        );
+    };
+    auto push = [&](const sf::FloatRect& r){
+        m_colisiones.push_back(r);
+        sf::RectangleShape s; s.setPosition(r.position); s.setSize(r.size);
+        s.setFillColor(sf::Color(0,255,255,60));
+        s.setOutlineColor(sf::Color(0,120,255,200));
+        s.setOutlineThickness(1.5f);
+        m_dbgColisiones.push_back(s);
+    };
+
+    // ===== PAREDES (finitas, sin cubrir el aula) =====
+    push(T(0,   0,    LW, 150));                // superior
+    push(T(0,  32,    112, LH));             // lateral izq
+    push(T(LW-126, 32, 112, LH));             // lateral der
+
+    // Zócalo inferior con hueco de puerta (centro)
+    const float baseH = 22, doorW = 210;
+    const float cx = LW * 0.5f;
+    push(T(0, LH-baseH, cx - doorW*0.5f+40, baseH));
+    push(T(cx + doorW*0.5f +40, LH-baseH, LW - (cx + doorW*0.5f), baseH));
+
+    // ===== BLOQUES GRANDES (arriba/laterales) =====
+    // Librero alto izq
+    push(T(104, 72, 320, 92));
+    // Escritorio PC arriba-centro
+    push(T(560, 76, 228, 92));
+    // Mesas carpetas arriba-dcha
+    push(T(904, 76, 328, 92));
+    // Libreros medio-izq (dos módulos)
+    push(T(0, 340, 460, 194));
+    // Escritorio con taza medio-dcha
+    push(T(1065, 220, 220, 110));
+    // Archiveros + mesita abajo-dcha
+    push(T(1200, 604, 238, 186));
+    // Librero/mesita abajo-izq
+    push(T(112, 600, 238, 205));
+
+    // ===== MÁQUINA CIRCULAR (solo su “base” real) =====
+    // Más pequeña para que puedas rodearla
+    push(T(1180, 400, 225, 130));
+
+    // ===== MESAS AMARILLAS (3 columnas) =====
+    // Columnas más angostas y con “respiro” arriba/abajo
+    const float colW = 92;
+    // Izquierda
+    push(T(640, 330, colW + 25, 200));              // tramo superior
+    push(T(640, 540, colW + 25, 200));              // tramo inferior
+    // Centro
+    //push(T(785, 330, colW, 170));
+    //push(T(785, 560, colW, 170));
+    // Derecha
+    push(T(915, 330, colW + 25, 200));
+    push(T(915, 540, colW + 25, 200));
+
+    // ===== SILLAS VERDES (solo las que bloquean) =====
+    // Deja pasillos; no colisionamos todas.
+    push(T(520, 400, 100, 70));  // izq-sup
+    push(T(520, 610, 100, 70));  // izq-inf
+    //push(T(740, 420, 54, 54));  // centro-sup izq
+    //push(T(830, 660, 54, 54));  // centro-inf der
+    push(T(1035,400, 100, 70));  // der-sup
+    push(T(1035,610, 100, 70));  // der-inf
+
+    // >>> IMPORTANTE: NO hay ningún rectángulo grande “de piso”.
+    // Solo piezas; así los pasillos (entre columnas y hacia la puerta) quedan libres.
+}
+
+void EdificioDescartes::aplicarColisiones() {
+    const sf::FloatRect player = m_personaje.obtenerHitbox();
+    for (const auto& box : m_colisiones){
+        if (EdificioDescartes::intersecta(player, box)){  // usa tu helper
+            m_personaje.setPosition(
+                (int)std::lround(m_prevPosJugador.x),
+                (int)std::lround(m_prevPosJugador.y)
+            );
+            return;
+        }
     }
 }

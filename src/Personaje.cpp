@@ -1,6 +1,9 @@
 #include "Personaje.h"
 #include <iostream>
 #include <string>
+#include <fstream>
+#include <cstring>
+#include <algorithm>
 
 const std::string Personaje::QUIETO_PATH = "assets/Player/idle.png";
 const std::string Personaje::CAMINAR_PATH = "assets/Player/run.png";
@@ -629,4 +632,57 @@ std::string Personaje::getNombre() {
 std::string Personaje::getEquipo() const {
     if(equipo == EquipoFilosofico::Empiristas) {return "Empirista";}
     if(equipo == EquipoFilosofico::Racionalistas) {return "Racionalista";}
+}
+
+// Al final del archivo, añade estas implementaciones:
+
+namespace {
+#pragma pack(push, 1)
+struct BinPersonajeV1 {
+    int32_t version = 1;
+    float   x;
+    float   y;
+    int32_t vidas;
+    int32_t equipo;         // Personaje::EquipoFilosofico enum -> int
+    char    nombre[64];     // UTF-8 truncado
+};
+#pragma pack(pop)
+
+static void copiarNombre(const std::string& src, char dst[64]) {
+    std::size_t n = std::min<std::size_t>(src.size(), 63);
+    std::memset(dst, 0, 64);
+    std::memcpy(dst, src.data(), n);
+}
+} // namespace
+
+bool Personaje::guardarEnBinario(const std::string& ruta) const {
+    BinPersonajeV1 data{};
+    auto pos = getPosition();                    // ya lo expones
+    data.x = pos.x; data.y = pos.y;
+    data.vidas = getVidas();                     // ya lo expones
+    data.equipo = static_cast<int32_t>(getEquipoFilosofico()); // ya lo expones
+    copiarNombre(const_cast<Personaje*>(this)->getNombre(), data.nombre); // getter disponible
+
+    std::ofstream out(ruta, std::ios::binary);
+    if (!out) return false;
+    out.write(reinterpret_cast<const char*>(&data), sizeof(data));
+    return static_cast<bool>(out);
+}
+
+bool Personaje::cargarDesdeBinario(const std::string& ruta) {
+    BinPersonajeV1 data{};
+    std::ifstream in(ruta, std::ios::binary);
+    if (!in) return false;
+    in.read(reinterpret_cast<char*>(&data), sizeof(data));
+    if (!in || data.version != 1) return false;
+
+    setPosition(static_cast<int>(data.x), static_cast<int>(data.y)); // tienes setPosition(int,int)
+    setVidas(data.vidas);
+    setNombre(std::string(data.nombre));                              // getter/setter ya existen
+    setEquipoFilosofico(static_cast<EquipoFilosofico>(data.equipo));  // enum expuesto
+
+    // Reaplica texturas si tu lógica las depende del equipo/estado.
+    // (Tus métodos ya gestionan texturas y estados)
+
+    return true;
 }

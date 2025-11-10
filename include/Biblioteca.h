@@ -188,6 +188,9 @@ private:
 
     // Rebuild rápido cuando cambien las vidas
     void actualizarHUD();
+
+    bool puedeSalirBiblioteca() const;          // true si ya no quedan categorías
+    int  minijuegosRestantes() const;
 };
 
 #endif

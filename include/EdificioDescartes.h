@@ -147,6 +147,16 @@ private:
     sf::RectangleShape m_areaSalida;
     void interaccionSalida();
     static bool intersecta(const sf::FloatRect& A, const sf::FloatRect& B);
+
+    // --- COLISIONES ---
+    std::vector<sf::FloatRect> m_colisiones;
+    std::vector<sf::RectangleShape> m_dbgColisiones;
+    sf::Vector2f m_prevPosJugador{};
+    bool m_debugColisiones = true; // F3 toggle
+
+    void cargarColisionesMapa();
+    void aplicarColisiones();
+    std::vector<sf::Text> m_dbgNumeros;
 };
 
 #endif

@@ -4,54 +4,99 @@
 #include "Personaje.h"
 #include "Biblioteca.h"
 #include "GestorEstados.h"
+#include "Menu.h"
+#include "SaveGameManager.h"
 #include <iostream>
-#include <cstdlib>
-#include <ctime>
-#include <memory> // Necesario para std::unique_ptr
+#include <memory>
+#include <unordered_set>
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode({1920, 1080}), "Mapa con Tilemaps");
+    // Ventana
+    sf::RenderWindow window(sf::VideoMode({1920u, 1080u}), "ProyectoEstru2 - Menu");
     window.setFramerateLimit(60);
-
     if (!window.isOpen()) {
-        std::cerr << "❌ ERROR: No se pudo crear la ventana" << std::endl;
+        std::cerr << "❌ ERROR: No se pudo crear la ventana\n";
         return -1;
     }
 
-    std::unordered_set<int> tilesValidos = {0}; // Asumiendo que 0 es el tile transitable
+    // Personaje + Gestor
+    std::unordered_set<int> tilesValidos = {0}; // ajusta según tus tilemaps transitables
     Personaje jugador(3.0f, tilesValidos);
-
-    // **1. Inicializar el Gestor de Estados (State Manager)**
     GestorEstados gestor(window, jugador);
 
-    std::unique_ptr<MapaPrincipal> estadoMapa = std::make_unique<MapaPrincipal>(&gestor, window, jugador);
-    //std::unique_ptr<Biblioteca> estadoMapa = std::make_unique<Biblioteca>(&gestor, window, jugador);
+    // Fuente y Menu
+    sf::Font font;
+    if (!font.openFromFile("assets/Pokemon_GB.ttf")) {
+        std::cerr << "⚠️ No se pudo cargar assets/Pokemon_GB.ttf (seguimos con font por defecto del objeto)\n";
+    }
+    Menu menu(window, &font);
+    menu.setTitle("Menu Principal");
 
-    // Ejecutar la función que configura los TileMaps, etc.
-    estadoMapa->ejecutarMapa();
+    // Estado del menú
+    bool menuActivo = true;
 
-    // Empujar el estado al gestor. El gestor ahora controla este estado.
-    gestor.empujarEstado(std::move(estadoMapa));
+    // Callbacks
+    menu.onNuevaPartida = [&](const std::string& nombre) {
+        jugador.setNombre(nombre);
+        if (SaveGame::guardarJuego(jugador, ProgresoJuego::get()))
+            std::cout << u8"[SAVE] Nueva partida guardada.\n";
+        else
+            std::cout << u8"[SAVE] ERROR al guardar.\n";
+        menuActivo = false;
+    };
 
-    sf::Clock clock;
+    menu.onCargarPartida = [&]() {
+        if (SaveGame::cargarJuego(jugador, ProgresoJuego::get()))
+            std::cout << u8"[LOAD] Partida cargada.\n";
+        else
+            std::cout << u8"[LOAD] No se encontró la partida.\n";
+        menuActivo = false;
+    };
 
-    // Loop principal
+    // Loop de app
     while (window.isOpen()) {
-        // float deltaTime = clock.restart().asSeconds(); // Opcional si usas setFramerateLimit(60)
+        // Eventos
+        while (auto ev = window.pollEvent()) {
+            const sf::Event& event = *ev; // SFML 3: pollEvent() devuelve optional
+            if (menuActivo) {
+                menu.handleEvent(event);
+            } else if (event.is<sf::Event::Closed>()) {
+                window.close();
+            }
+        }
 
-        // **3. DELEGACIÓN COMPLETA AL GESTOR DE ESTADOS**
-        // El Gestor llama a los métodos del estado que esté activo (MapaPrincipal o Biblioteca)
+        // Mostrar menú hasta que se elija opción
+        if (menuActivo) {
+            menu.update();
+            window.clear(sf::Color(10, 10, 20));
+            menu.draw();
+            window.display();
+            continue; // aún no iniciamos el juego
+        }
 
-        // Manejar Eventos: El estado activo se encarga de los eventos (incluido el cierre de la ventana y el movimiento del personaje)
-        gestor.manejarEventos();
+        // ===== Cuando salimos del menú, arrancamos el juego =====
+        {
+            std::unique_ptr<MapaPrincipal> estadoMapa = std::make_unique<MapaPrincipal>(&gestor, window, jugador);
+            estadoMapa->ejecutarMapa(); // prepara tus tilemaps, etc.
+            gestor.empujarEstado(std::move(estadoMapa));
+        }
 
-        // ACTUALIZAR: Lógica del juego y colisiones (incluye la detección de entrada a la biblioteca)
-        gestor.actualizar();
+        // Loop del juego (delegado al GestorEstados)
+        while (window.isOpen()) {
+            while (auto ev = window.pollEvent()) {
+                const sf::Event& event = *ev;
+                if (event.is<sf::Event::Closed>()) {
+                    window.close();
+                } else {
+                    gestor.manejarEventos();
+                }
+            }
 
-        // DIBUJAR
-        window.clear();
-        gestor.dibujar(); // Dibuja el estado activo
-        window.display();
+            gestor.actualizar();
+            window.clear();
+            gestor.dibujar();
+            window.display();
+        }
     }
 
     return 0;

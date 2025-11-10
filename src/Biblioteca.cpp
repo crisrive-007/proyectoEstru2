@@ -3,6 +3,7 @@
 #include "MinijuegoCiencia.h"
 #include "MinijuegoHistoria.h"
 #include "MinijuegoPolitica.h"
+#include "ProgresoJuego.h"
 
 #include <iostream>
 #include <algorithm>
@@ -75,7 +76,7 @@ Biblioteca::Biblioteca(GestorEstados* gestor, sf::RenderWindow& window, Personaj
     // Salida general (ajusta a donde tengas la “salida”)
     m_areaSalida.setSize({210.f, 32.f});
     m_areaSalida.setPosition({ MAP_ORIG.x + MAP_SIZE.x * 0.5f - 105.f, 950.f});
-    m_areaSalida.setFillColor(sf::Color(255, 0, 0, 120));
+    m_areaSalida.setFillColor(sf::Color(0, 0, 0, 0));
 
     // Puertas: alineamos los triggers al rect de cada puerta
     auto mkDoor = [&](sf::RectangleShape& r, const sf::FloatRect& fr, sf::Color c){
@@ -84,10 +85,10 @@ Biblioteca::Biblioteca(GestorEstados* gestor, sf::RenderWindow& window, Personaj
         r.setFillColor(c);
     };
 
-    mkDoor(m_areaPuerta1, m_puertaRect[0], sf::Color(0,   255, 0,  80));
-    mkDoor(m_areaPuerta2, m_puertaRect[1], sf::Color(255, 0,   0,  80));
-    mkDoor(m_areaPuerta3, m_puertaRect[2], sf::Color(0,   0, 255,  80));
-    mkDoor(m_areaPuerta4, m_puertaRect[3], sf::Color(255, 255, 0,  80));
+    mkDoor(m_areaPuerta1, m_puertaRect[0], sf::Color(0,   0, 0,  0));
+    mkDoor(m_areaPuerta2, m_puertaRect[1], sf::Color(0, 0,   0,  0));
+    mkDoor(m_areaPuerta3, m_puertaRect[2], sf::Color(0,   0, 0,  0));
+    mkDoor(m_areaPuerta4, m_puertaRect[3], sf::Color(0, 0, 0,  0));
 
     // === HUD (Nombre y Vidas) ===
     m_hudBox.setSize({250.f, 80.f});
@@ -242,8 +243,8 @@ void Biblioteca::cargarColisionesMapa() {
         sf::RectangleShape s;
         s.setPosition(r.position);
         s.setSize(r.size);
-        s.setFillColor(sf::Color(0,255,255,60));   // cian translúcido
-        s.setOutlineColor(sf::Color(0,120,255,200));
+        s.setFillColor(sf::Color(0,0,0,0));   // cian translúcido
+        s.setOutlineColor(sf::Color(0,0,0,0));
         s.setOutlineThickness(1.5f);
         m_dbgColisiones.push_back(s);
     };
@@ -294,8 +295,8 @@ void Biblioteca::cargarColisionesMapa() {
     // Gadgets a la derecha de cada poste (bloques cuadrados)
     auto pushG = [&](float x){ m_colisiones.push_back(W(x,265,110,110));
         sf::RectangleShape s; s.setPosition({MAP_ORIG.x + x, MAP_ORIG.y + 265});
-        s.setSize({110,110}); s.setFillColor(sf::Color(0,255,255,60));
-        s.setOutlineColor(sf::Color(0,120,255,200)); s.setOutlineThickness(1.5f);
+        s.setSize({110,110}); s.setFillColor(sf::Color(0,0,0,0));
+        s.setOutlineColor(sf::Color(0,0,0,0)); s.setOutlineThickness(1.5f);
         m_dbgColisiones.push_back(s);
     };
     pushG(220); pushG(550); pushG(870); pushG(1200);
@@ -344,8 +345,8 @@ void Biblioteca::actualizarDebugLockables() {
         sf::RectangleShape s;
         s.setPosition(r.position);
         s.setSize(r.size);
-        s.setFillColor(sf::Color(255,0,0,55));      // rojo translúcido = bloqueado
-        s.setOutlineColor(sf::Color(200,0,0,220));
+        s.setFillColor(sf::Color(0,0,0,0));      // rojo translúcido = bloqueado
+        s.setOutlineColor(sf::Color(0,0,0,0));
         s.setOutlineThickness(1.5f);
         m_dbgLockables.push_back(s);
     };
@@ -401,6 +402,9 @@ void Biblioteca::setupRuleta() {
     if (!m_fontR.openFromFile("assets/Pokemon_GB.ttf")) {
         std::cerr << "✗ ERROR: assets/Pokemon_GB.ttf\n";
     }
+
+    m_opcionesR = {"Arte", "Politica", "Ciencia", "Historia"};
+    m_idxActual = 0;
 
     m_txtR.setFont(m_fontR);
     m_txtR.setString(m_opcionesR[m_idxActual]);
@@ -659,9 +663,22 @@ void Biblioteca::interaccionPuertas() {
 #else
     if (intersecta(personajeBounds, m_areaSalida.getGlobalBounds())) {
 #endif
+        // ✅ Nuevo: sólo permitimos salir si ya hiciste las 4 categorías
+        if (!puedeSalirBiblioteca()) {
+            // Empuja hacia atrás y muestra mensaje con faltantes
+            m_personaje.setPosition(m_prevPosJugador.x, m_prevPosJugador.y);
+            const int faltan = minijuegosRestantes();
+            if (faltan == 1)
+                mostrarMensaje("Aún falta 1 minijuego.", 1.2f);
+            else
+                mostrarMensaje("Aún faltan " + std::to_string(faltan) + " minijuegos.", 1.2f);
+            return;
+        }
+
+        // (Comportamiento original) — ya puedes salir
         std::cout << "🚪 Saliendo de la biblioteca.\n";
+        ProgresoJuego::get().marcarCleared(ProgresoJuego::Nivel::Biblioteca);
         gestor->sacarEstado();
-        // Reubica al jugador donde corresponda fuera del mapa
         m_personaje.setPosition(915.f, 300.f);
         return;
     }
@@ -916,4 +933,14 @@ void Biblioteca::actualizarHUD() {
         c.setPosition(base + sf::Vector2f{ i * 35.f, 0.f });
         m_corazones.push_back(c);
     }
+}
+
+bool Biblioteca::puedeSalirBiblioteca() const {
+    // Cuando la ruleta ya no tiene opciones, significa que se consumieron las 4
+    // categorías (Arte, Política, Ciencia, Historia).
+    return m_opcionesR.empty();
+}
+
+int Biblioteca::minijuegosRestantes() const {
+    return static_cast<int>(m_opcionesR.size());
 }

@@ -192,7 +192,7 @@ void Combate::armarPreguntas() {
     m_preguntas.clear();
     m_preguntas.push_back({"Para algunos de los siguientes filosofos, el criterio de verdad es la evidencia sensible:",
         {"Empiristas","Criticistas","Racionalistas","Dogmaticos"}, 0});
-    m_preguntas.push_back({"De las siguientes, una de ellas es la corriente filosofica que en general tiende a negar la posibilidad de la metafisica y a sostener que hay conocimiento unicamente de los fenomenos.",
+    m_preguntas.push_back({"De las siguientes, una de ellas es la corriente filosofica que en general tiende a negar\nla posibilidad de la metafisica y a sostener que hay conocimiento unicamente de los fenomenos.",
         {"Racionalistas","Empiristas","Escolasticos","Escepticos"}, 1});
     m_preguntas.push_back({"Para unos de los siguientes filosofos, la experiencia como unica fuente del conocimiento.",
         {"Epistemologos","Racionalistas","Empiristas","Escepticos"}, 2});
@@ -459,7 +459,6 @@ void Combate::onWin() {
 void Combate::salirDelMinijuego() {
     m_bgm.stop();
     gestor->sacarEstado();
-    personaje.setPosition(60, 400);
 }
 
 void Combate::onLose() {

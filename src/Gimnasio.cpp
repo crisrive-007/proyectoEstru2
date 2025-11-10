@@ -1,4 +1,5 @@
 #include "Gimnasio.h"
+#include "ProgresoJuego.h"
 #include <iostream>
 #include <algorithm>
 
@@ -23,6 +24,11 @@ Gimnasio::Gimnasio(GestorEstados* gestor, sf::RenderWindow& window, Personaje& p
 , m_txtNombre(m_font)
 , m_txtDialogo(m_font)
 {
+    if (!ProgresoJuego::get().puedeEntrar(ProgresoJuego::Nivel::Gimnasio)) {
+        std::cout << "🔒 Gimnasio bloqueado: termina la Biblioteca primero.\n";
+        gestor->sacarEstado();
+        return;
+    }
     // === Fondo base (cámbialo por el que quieras) ===
     if (!m_texFondo.loadFromFile("assets/Tilesets/GimnasioPokemon.png")) {
         std::cerr << "✗ ERROR: assets/Tilesets/FondoSimple.png\n";
@@ -195,6 +201,7 @@ void Gimnasio::actualizar() {
     sf::FloatRect playerBox = m_personaje.obtenerHitbox();
     if (intersecta(playerBox, m_areaSalida.getGlobalBounds())) {
         std::cout << "🚪 Saliendo del gimnasio.\n";
+        ProgresoJuego::get().marcarCleared(ProgresoJuego::Nivel::Gimnasio);
         gestor->sacarEstado(); // vuelve al mapa anterior
         m_personaje.setPosition(585.f, 625.f); // posición fuera del gimnasio
         return;

@@ -45,6 +45,7 @@ public:
     void reiniciarVidas();       // vuelve a 0
     void ganarVida();   // suma n vidas (por defecto 1)
     int  getVidas() const;
+    void setVidas(int v) { vidas = v; }
 
     float getRadioColision();
 
@@ -65,6 +66,9 @@ public:
     void setNombre(std::string name);
     std::string getNombre();
 
+    bool guardarEnBinario(const std::string& ruta) const;
+    bool cargarDesdeBinario(const std::string& ruta);
+
     ~Personaje();
 
 private:
@@ -76,7 +80,7 @@ private:
     Direccion ultima;
     float radioColision;
     EquipoFilosofico equipo = EquipoFilosofico::Ninguno;
-    std::string nombre = "criku";
+    std::string nombre;
 
 
     // Tiles v�lidos ahora se recibe como par�metro

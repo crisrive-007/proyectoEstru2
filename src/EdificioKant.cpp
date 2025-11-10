@@ -1,6 +1,6 @@
 #include "EdificioKant.h"
 #include "GestorEstados.h"
-// #include "EdificioDescartes.h"
+#include "ProgresoJuego.h"
 
 #include <iostream>
 #include <sstream>
@@ -45,6 +45,11 @@ EdificioKant::EdificioKant(GestorEstados* gestor, sf::RenderWindow& window, Pers
     sf::Text(m_font, "", 20)
 }}
 {
+    if (!ProgresoJuego::get().puedeEntrar(ProgresoJuego::Nivel::Kant)) {
+        std::cout << "🔒 Edificio Kant bloqueado: termina el Gimnasio primero.\n";
+        gestor->sacarEstado();
+        return;
+    }
     // === FONDO DEL AULA ===
     if (!m_texFondo.loadFromFile("assets/Tilesets/aulaKant.png")) {
         std::cerr << "Error: no se pudo cargar assets/Tilesets/aulaKant.png\n";
@@ -630,9 +635,10 @@ void EdificioKant::interaccionSalida() {
     }
 
     // Flow completado → salir del aula
+    ProgresoJuego::get().marcarCleared(ProgresoJuego::Nivel::Kant);
     gestor->sacarEstado();
     // Reubica al jugador fuera del edificio (ajusta a tu mundo exterior)
-    m_personaje.setPosition(915.f, 300.f);
+    m_personaje.setPosition(840.f, 605.f);
 }
 
 // === EdificioKant.cpp ===
